@@ -1,0 +1,46 @@
+.screen {
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  position: relative;
+}
+
+.screen-inicio h1 {
+  font-size: 48px;
+  letter-spacing: 4px;
+  margin: 0;
+}
+
+.screen-inicio button {
+  font: inherit;
+  padding: 12px 28px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-h);
+  cursor: pointer;
+}
+
+.screen-inicio button:hover {
+  background: var(--accent-bg);
+  border-color: var(--accent-border);
+}
+
+.screen-nave {
+  background: #05060a radial-gradient(1px 1px at 20% 30%, #fff, transparent),
+    radial-gradient(1px 1px at 70% 60%, #fff, transparent),
+    radial-gradient(1px 1px at 40% 80%, #fff, transparent),
+    radial-gradient(1px 1px at 85% 15%, #fff, transparent),
+    radial-gradient(1px 1px at 55% 45%, #fff, transparent);
+}
+
+.screen-nave h2 {
+  position: absolute;
+  top: 24px;
+  left: 24px;
+  margin: 0;
+  color: #f3f4f6;
+}
