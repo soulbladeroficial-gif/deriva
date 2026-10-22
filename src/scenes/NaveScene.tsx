@@ -8,15 +8,18 @@ import { updateSobrevivencia } from '../systems/sobrevivencia'
 import { updateMovimento, type Bounds } from '../systems/movimento'
 import {
   acaoUparDisponivel,
+  capacidadeBuffer,
   construcaoColocadaProxima,
   construcaoNoSlot,
+  depositar,
   pendentes,
   pertoDe,
+  podeDepositar,
   removerColocada,
   slotVazioProximo,
   updateConstrucoesNave,
 } from '../systems/construcoesNave'
-import { descricaoConversor } from '../systems/conversor'
+import { descricaoBuffer, descricaoConversor } from '../systems/conversor'
 import { updatePanes, podeRepararCasco, repararCasco } from '../systems/casco'
 import { dormir } from '../systems/dormitorio'
 import { SALAS, CAMA } from '../content/salasNave'
@@ -123,6 +126,11 @@ export default function NaveScene({ stateRef, onExplorarPlaneta }: Props) {
             ctx.fillStyle = '#9ca3af'
             ctx.font = '10px sans-serif'
             ctx.fillText(descricaoConversor(def.conversor, inst.nivel), sx, sy + 58)
+            const bufferTexto = descricaoBuffer(def.conversor, inst.bufferEntrada, capacidadeBuffer(def))
+            if (bufferTexto) {
+              ctx.fillStyle = '#7dd3fc'
+              ctx.fillText(bufferTexto, sx, sy + 70)
+            }
           }
         } else {
           ctx.strokeStyle = 'rgba(255,255,255,0.15)'
@@ -208,6 +216,13 @@ export default function NaveScene({ stateRef, onExplorarPlaneta }: Props) {
     setHud(cloneForHud(stateRef.current))
   }
 
+  function depositarAgora() {
+    const def = construcaoColocadaProxima(stateRef.current)
+    if (!def) return
+    depositar(stateRef.current, def.id)
+    setHud(cloneForHud(stateRef.current))
+  }
+
   function dormirAgora() {
     const resultado = dormir(stateRef.current)
     setHud(cloneForHud(stateRef.current))
@@ -228,7 +243,9 @@ export default function NaveScene({ stateRef, onExplorarPlaneta }: Props) {
       <h2>Nave</h2>
       <p className="dica">
         WASD/setas pra andar · crie construções no menu abaixo · leve até um slot vazio e aperte E
-        pra instalar · chegue perto de uma instalada e aperte E pra upar
+        pra instalar · chegue perto de uma instalada e aperte E pra upar · construções que
+        processam material (Eletrolisador, Oficina etc.) têm um estoque próprio — deposite o
+        material nelas pra elas funcionarem
       </p>
       <canvas ref={canvasRef} width={CANVAS_W} height={CANVAS_H} className="nave-canvas" />
       {avisoSono && <p className="aviso-sono">{avisoSono}</p>}
@@ -273,6 +290,15 @@ export default function NaveScene({ stateRef, onExplorarPlaneta }: Props) {
         {construcaoProximaParaRemover && (
           <button type="button" onClick={remover}>
             Remover {construcaoProximaParaRemover.nome}
+          </button>
+        )}
+        {construcaoProximaParaRemover?.conversor?.consomeItem && (
+          <button
+            type="button"
+            onClick={depositarAgora}
+            disabled={!podeDepositar(hud, construcaoProximaParaRemover)}
+          >
+            Depositar {construcaoProximaParaRemover.conversor.consomeItem.item}
           </button>
         )}
         {pertoDaCama && (

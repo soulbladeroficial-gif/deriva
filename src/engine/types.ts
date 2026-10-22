@@ -26,6 +26,8 @@ export interface ConstrucaoState {
   colocada: boolean
   salaId?: string
   slotIndex?: number
+  /** estoque próprio da construção pro material de entrada — só mexe no inventário geral quando o jogador deposita */
+  bufferEntrada: number
 }
 
 export type ConstrucoesState = Record<string, ConstrucaoState>

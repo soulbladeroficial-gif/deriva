@@ -13,7 +13,11 @@ export interface ConstrucaoDef {
   cor: string
   /** se true, não precisa de Bancada de Upgrade instalada pra evoluir de nível (caso da própria Bancada) */
   bancada?: boolean
+  /** capacidade do estoque próprio pro material de entrada (só relevante se conversor.consomeItem existir) */
+  capacidadeBuffer?: number
 }
+
+export const CAPACIDADE_BUFFER_PADRAO = 10
 
 export const CONSTRUCOES: ConstrucaoDef[] = [
   // Suporte de Vida

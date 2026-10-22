@@ -1,6 +1,11 @@
 import type { GameState } from '../engine/types'
 import type { InputState } from '../engine/input'
-import { CONSTRUCOES, type ConstrucaoDef, type NivelCusto } from '../content/construcoesNave'
+import {
+  CONSTRUCOES,
+  CAPACIDADE_BUFFER_PADRAO,
+  type ConstrucaoDef,
+  type NivelCusto,
+} from '../content/construcoesNave'
 import { SALAS, type SalaDef } from '../content/salasNave'
 import { updateConversor } from './conversor'
 
@@ -51,7 +56,35 @@ export function criarConstrucao(state: GameState, id: string) {
   for (const [item, qtd] of Object.entries(def.niveis[0])) {
     state.inventario[item] -= qtd
   }
-  state.construcoes[id] = { nivel: 1, colocada: false }
+  state.construcoes[id] = { nivel: 1, colocada: false, bufferEntrada: 0 }
+}
+
+export function capacidadeBuffer(def: ConstrucaoDef) {
+  return def.capacidadeBuffer ?? CAPACIDADE_BUFFER_PADRAO
+}
+
+/** quanto dá pra depositar agora (limitado pelo que sobra de espaço e pelo que tem no inventário) */
+export function quantidadeParaDepositar(state: GameState, def: ConstrucaoDef) {
+  if (!def.conversor?.consomeItem) return 0
+  const inst = state.construcoes[def.id]
+  if (!inst) return 0
+  const espacoLivre = capacidadeBuffer(def) - inst.bufferEntrada
+  const disponivel = state.inventario[def.conversor.consomeItem.item] ?? 0
+  return Math.max(0, Math.min(espacoLivre, disponivel))
+}
+
+export function podeDepositar(state: GameState, def: ConstrucaoDef) {
+  return quantidadeParaDepositar(state, def) > 0
+}
+
+export function depositar(state: GameState, defId: string) {
+  const def = construcaoPorId(defId)
+  const inst = state.construcoes[defId]
+  if (!def?.conversor?.consomeItem || !inst) return
+  const qtd = quantidadeParaDepositar(state, def)
+  if (qtd <= 0) return
+  state.inventario[def.conversor.consomeItem.item] -= qtd
+  inst.bufferEntrada += qtd
 }
 
 export function construcaoNoSlot(state: GameState, salaId: string, slotIndex: number) {
@@ -115,7 +148,7 @@ export function updateConstrucoesNave(state: GameState, input: InputState, dt: n
   for (const def of CONSTRUCOES) {
     const inst = state.construcoes[def.id]
     if (inst?.colocada && inst.nivel >= 1 && def.conversor) {
-      updateConversor(state, dt, def.conversor, inst.nivel)
+      updateConversor(state, dt, def.conversor, inst.nivel, inst)
     }
   }
 

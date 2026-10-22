@@ -1,4 +1,4 @@
-import type { GameState } from '../engine/types'
+import type { ConstrucaoState, GameState } from '../engine/types'
 
 export interface ConversorSpec {
   consomeItem?: { item: string; taxa: number }
@@ -13,13 +13,23 @@ export interface ConversorSpec {
   reduzConsumoPercent?: number
 }
 
-/** nivel multiplica consumo e produção — nível 2 e 3 rendem mais, consistente com o upgrade. */
-export function updateConversor(state: GameState, dt: number, spec: ConversorSpec, nivel = 1) {
+/**
+ * nivel multiplica consumo e produção — nível 2 e 3 rendem mais, consistente com o upgrade.
+ * O material de entrada sai do BUFFER PRÓPRIO da construção (inst.bufferEntrada), não do
+ * inventário geral — o jogador precisa depositar manualmente pra reabastecer.
+ */
+export function updateConversor(
+  state: GameState,
+  dt: number,
+  spec: ConversorSpec,
+  nivel = 1,
+  inst?: ConstrucaoState,
+) {
   if (spec.consomeItem) {
     const consumo = spec.consomeItem.taxa * nivel * dt
-    const disponivel = state.inventario[spec.consomeItem.item] ?? 0
-    if (disponivel < consumo) return
-    state.inventario[spec.consomeItem.item] = disponivel - consumo
+    const bufferAtual = inst?.bufferEntrada ?? 0
+    if (bufferAtual < consumo) return
+    if (inst) inst.bufferEntrada = bufferAtual - consumo
   }
 
   if (spec.consomeEnergia) {
@@ -63,4 +73,14 @@ export function descricaoConversor(spec: ConversorSpec, nivel: number): string {
   if (spec.produzO2Nave) partes.push(`+${(spec.produzO2Nave * nivel).toFixed(1)} O2/s`)
   if (spec.reduzConsumoPercent) partes.push(`-${(spec.reduzConsumoPercent * nivel * 100).toFixed(0)}% consumo`)
   return partes.join('  ')
+}
+
+/** texto tipo "Água Pura: 3.2/10" mostrando o estoque interno da construção */
+export function descricaoBuffer(
+  spec: ConversorSpec,
+  bufferEntrada: number,
+  capacidade: number,
+): string | null {
+  if (!spec.consomeItem) return null
+  return `${spec.consomeItem.item}: ${bufferEntrada.toFixed(1)}/${capacidade}`
 }
