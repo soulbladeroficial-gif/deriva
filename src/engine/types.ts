@@ -20,10 +20,16 @@ export interface ConstrucoesState {
   eletrolisador: { construido: boolean }
 }
 
+export interface PosicaoState {
+  x: number
+  y: number
+}
+
 export interface GameState {
   tick: number
   nave: NaveState
   jogador: JogadorState
   inventario: Inventory
   construcoes: ConstrucoesState
+  posicao: PosicaoState
 }

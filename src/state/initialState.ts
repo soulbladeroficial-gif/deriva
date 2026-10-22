@@ -24,5 +24,6 @@ export function createInitialState(): GameState {
     construcoes: {
       eletrolisador: { construido: false },
     },
+    posicao: { x: 400, y: 260 },
   }
 }
