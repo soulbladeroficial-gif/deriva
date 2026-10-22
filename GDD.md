@@ -73,7 +73,7 @@ O jogador constrói do zero. A maioria tem **níveis de upgrade** (1, 2, 3), cad
 - **Oficina** — metal bruto → peças/componentes (insumo de reparo do casco e de upgrades).
 - **Bancada de Upgrade** — peças + minério raro → aplica upgrade em ferramentas/traje/drones/torretas/blindagem (não gera item, só aplica efeito).
 - **Triturador** — processa **itens exóticos** (achados/objetos estranhos, não minério comum) em uma quantidade fixa de outros itens. Ex: `1 Motor Velho → 2 Ferro-Níquel + 1 Titânio Bruto`. O resultado normalmente é Estrutural, mas pode ocasionalmente ser Energético ou Orgânico.
-- *Em aberto*: automação entre bancadas (conectar output de uma direto no input de outra) — primeira ideia foi rejeitada, revisar depois.
+- Sem automação entre bancadas — o jogador sempre carrega o item manualmente de uma construção pra outra.
 
 ### Defesa
 - **Torreta Automática + Sistema de Mira Manual** — defesa híbrida contra chuva de asteroides (energia + munição); a automática cobre a maior parte, a mira manual reforça a eficácia.
@@ -285,5 +285,4 @@ Cada categoria de construção tem sua própria "linha" de material incomum/raro
 
 ## Pendências
 
-- Mecânica de automação entre bancadas (ideia inicial rejeitada, revisar).
 - Classes de planeta/bioma (só rascunho inicial, não confirmado).
