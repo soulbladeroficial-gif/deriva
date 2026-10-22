@@ -67,7 +67,7 @@ export default function NaveScene({ stateRef, onExplorarPlaneta }: Props) {
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
-    function resize() {
+    const resize = () => {
       canvas.width = window.innerWidth
       canvas.height = window.innerHeight
     }

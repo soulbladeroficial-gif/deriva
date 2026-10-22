@@ -1,5 +1,4 @@
 import type { GameState } from '../engine/types'
-import { createInputState } from '../engine/input'
 import { updateReatorPrincipal } from './reatorPrincipal'
 import { updateConstrucoesNave } from './construcoesNave'
 import { updateSobrevivencia } from './sobrevivencia'
@@ -16,13 +15,12 @@ export interface ResultadoDormir {
 /** avança o tempo rapidamente até acontecer uma pane na nave (ou até a trava de segurança) */
 export function dormir(state: GameState): ResultadoDormir {
   const cascoAntes = state.nave.casco
-  const inputDummy = createInputState()
   let segundos = 0
 
   for (let i = 0; i < MAX_PASSOS; i++) {
     state.nave.energiaConsumida = 0
     updateReatorPrincipal(state)
-    updateConstrucoesNave(state, inputDummy, PASSO_SEGUNDOS)
+    updateConstrucoesNave(state, PASSO_SEGUNDOS)
     updateSobrevivencia(state, PASSO_SEGUNDOS)
     updatePanes(state, PASSO_SEGUNDOS)
     segundos += PASSO_SEGUNDOS
