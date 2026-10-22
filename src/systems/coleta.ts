@@ -1,15 +1,24 @@
 import type { GameState } from '../engine/types'
 import type { InputState } from '../engine/input'
-import { DEPOSITO_ROCHAS, RAIO_COLETA, ITEM_COLETADO, QUANTIDADE_POR_COLETA } from '../content/rochosoArido'
+import { DEPOSITOS, RAIO_COLETA, type DepositoDef } from '../content/rochosoArido'
 
-export function pertoDoDeposito(state: GameState) {
-  return Math.hypot(state.posicao.x - DEPOSITO_ROCHAS.x, state.posicao.y - DEPOSITO_ROCHAS.y) < RAIO_COLETA
+export function pertoDe(state: GameState, pos: { x: number; y: number }) {
+  return Math.hypot(state.posicao.x - pos.x, state.posicao.y - pos.y) < RAIO_COLETA
+}
+
+export function depositoMaisProximo(state: GameState): DepositoDef | null {
+  for (const d of DEPOSITOS) {
+    if (pertoDe(state, d.posicao)) return d
+  }
+  return null
 }
 
 export function updateColeta(state: GameState, input: InputState) {
   if (!input.interactRequested) return
+  const deposito = depositoMaisProximo(state)
+  if (!deposito) return
   input.interactRequested = false
-  if (!pertoDoDeposito(state)) return
 
-  state.inventario[ITEM_COLETADO] = (state.inventario[ITEM_COLETADO] ?? 0) + QUANTIDADE_POR_COLETA
+  state.inventario[deposito.itemColetado] =
+    (state.inventario[deposito.itemColetado] ?? 0) + deposito.quantidadePorColeta
 }

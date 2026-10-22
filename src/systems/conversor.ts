@@ -5,6 +5,10 @@ export interface ConversorSpec {
   consomeEnergia?: number
   produzItem?: { item: string; taxa: number }
   produzO2Nave?: number
+  /** adiciona à energia GERADA da nave (ex: Gerador a Combustível, Painel Solar) */
+  produzEnergia?: number
+  /** reduz o consumo total de energia da nave em X% (0.1 = 10%) — aplicado à parte, ver construcoesNave.ts */
+  reduzConsumoPercent?: number
 }
 
 /** nivel multiplica consumo e produção — nível 2 e 3 rendem mais, consistente com o upgrade. */
@@ -30,5 +34,9 @@ export function updateConversor(state: GameState, dt: number, spec: ConversorSpe
       state.nave.oxigenioMax,
       state.nave.oxigenio + spec.produzO2Nave * nivel * dt,
     )
+  }
+
+  if (spec.produzEnergia) {
+    state.nave.energiaGerada += spec.produzEnergia * nivel
   }
 }

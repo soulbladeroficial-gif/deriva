@@ -109,4 +109,47 @@ export const CONSTRUCOES: ConstrucaoDef[] = [
     cor: '#a3a3a3',
     bancada: true,
   },
+  {
+    id: 'geradorCombustivel',
+    nome: 'Gerador a Combustível',
+    posicao: { x: 850, y: 180 },
+    niveis: [
+      { 'Ferro-Níquel': 3, 'Basalto Denso': 2 },
+      { 'Prata Condutora': 2 },
+      { 'Liga Supercondutora': 2 },
+    ],
+    conversor: {
+      consomeItem: { item: 'Hidrogênio Gasoso', taxa: 0.05 },
+      produzEnergia: 8,
+    },
+    cor: '#fb923c',
+  },
+  {
+    id: 'painelSolar',
+    nome: 'Painel Solar',
+    posicao: { x: 1000, y: 300 },
+    niveis: [
+      { 'Cobre Nativo': 2, 'Ferro-Níquel': 2, 'Fibra Lenhosa': 1 },
+      { 'Prata Condutora': 2 },
+      { 'Liga Supercondutora': 2 },
+    ],
+    conversor: {
+      produzEnergia: 3,
+    },
+    cor: '#38bdf8',
+  },
+  {
+    id: 'otimizadorRede',
+    nome: 'Otimizador de Rede',
+    posicao: { x: 850, y: 450 },
+    niveis: [
+      { 'Cobre Nativo': 4 },
+      { 'Prata Condutora': 2 },
+      { 'Liga Supercondutora': 2 },
+    ],
+    conversor: {
+      reduzConsumoPercent: 0.1,
+    },
+    cor: '#c084fc',
+  },
 ]

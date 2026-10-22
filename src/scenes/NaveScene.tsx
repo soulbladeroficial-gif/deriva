@@ -18,14 +18,14 @@ import './NaveScene.css'
 const CANVAS_W = 640
 const CANVAS_H = 360
 const MARGEM_CASCO = 40
-const MUNDO = { x0: 0, y0: 0, x1: 900, y1: 550 }
+const MUNDO = { x0: 0, y0: 0, x1: 1100, y1: 650 }
 const BOUNDS: Bounds = {
   x0: MUNDO.x0 + MARGEM_CASCO,
   y0: MUNDO.y0 + MARGEM_CASCO,
   x1: MUNDO.x1 - MARGEM_CASCO,
   y1: MUNDO.y1 - MARGEM_CASCO,
 }
-const SPAWN_NAVE = { x: 400, y: 275 }
+const SPAWN_NAVE = { x: 550, y: 325 }
 const TILE_SIZE = 32
 const PLAYER_RAIO = 12
 

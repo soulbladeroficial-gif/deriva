@@ -50,6 +50,16 @@ export function updateConstrucoesNave(state: GameState, input: InputState, dt: n
     }
   }
 
+  // Otimizador de Rede reduz o consumo total, aplicado depois de somar tudo
+  const otimizador = CONSTRUCOES.find((def) => def.conversor?.reduzConsumoPercent)
+  if (otimizador) {
+    const nivel = nivelAtual(state, otimizador.id)
+    if (nivel >= 1) {
+      const reducao = (otimizador.conversor?.reduzConsumoPercent ?? 0) * nivel
+      state.nave.energiaConsumida *= Math.max(0, 1 - reducao)
+    }
+  }
+
   if (!input.interactRequested) return
   input.interactRequested = false
 

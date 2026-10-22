@@ -6,8 +6,8 @@ import { drawGridFloor } from '../rendering/drawGridFloor'
 import { updateSobrevivencia } from '../systems/sobrevivencia'
 import { updateMovimento, type Bounds } from '../systems/movimento'
 import { updateOxigenioTraje } from '../systems/oxigenioTraje'
-import { updateColeta, pertoDoDeposito } from '../systems/coleta'
-import { DEPOSITO_ROCHAS, NOME_PLANETA, ITEM_COLETADO } from '../content/rochosoArido'
+import { updateColeta, depositoMaisProximo } from '../systems/coleta'
+import { DEPOSITOS, NOME_PLANETA } from '../content/rochosoArido'
 import { cloneForHud } from '../state/cloneForHud'
 import InventoryGrid from '../ui/InventoryGrid'
 import type { GameState } from '../engine/types'
@@ -63,29 +63,32 @@ export default function PlanetaScene({ stateRef, onVoltarParaNave }: Props) {
 
     drawGridFloor(ctx, camera, CANVAS_W, CANVAS_H, TILE_SIZE, 'rgba(0,0,0,0.15)')
 
-    // depósito de rochas
-    const dx0 = DEPOSITO_ROCHAS.x - camera.x
-    const dy0 = DEPOSITO_ROCHAS.y - camera.y
-    ctx.fillStyle = '#8a7a6a'
-    ;[
-      [0, 0],
-      [18, -10],
-      [-16, 8],
-      [10, 16],
-    ].forEach(([ox, oy]) => {
-      ctx.beginPath()
-      ctx.arc(dx0 + ox, dy0 + oy, 16, 0, Math.PI * 2)
-      ctx.fill()
-    })
-    ctx.fillStyle = '#e5e7eb'
-    ctx.font = '12px sans-serif'
-    ctx.textAlign = 'center'
-    ctx.fillText('Depósito de Rochas', dx0, dy0 + 42)
+    // depósitos de recurso
+    const alvo = depositoMaisProximo(state)
+    for (const dep of DEPOSITOS) {
+      const dx0 = dep.posicao.x - camera.x
+      const dy0 = dep.posicao.y - camera.y
+      ctx.fillStyle = dep.cor
+      ;[
+        [0, 0],
+        [18, -10],
+        [-16, 8],
+        [10, 16],
+      ].forEach(([ox, oy]) => {
+        ctx.beginPath()
+        ctx.arc(dx0 + ox, dy0 + oy, 16, 0, Math.PI * 2)
+        ctx.fill()
+      })
+      ctx.fillStyle = '#e5e7eb'
+      ctx.font = '12px sans-serif'
+      ctx.textAlign = 'center'
+      ctx.fillText(dep.nome, dx0, dy0 + 42)
 
-    if (pertoDoDeposito(state)) {
-      ctx.fillStyle = '#f3f4f6'
-      ctx.font = 'bold 13px sans-serif'
-      ctx.fillText('[E] Minerar', dx0, dy0 - 32)
+      if (alvo?.id === dep.id) {
+        ctx.fillStyle = '#f3f4f6'
+        ctx.font = 'bold 13px sans-serif'
+        ctx.fillText('[E] Coletar', dx0, dy0 - 32)
+      }
     }
 
     // personagem — sempre centralizado na tela
@@ -127,7 +130,7 @@ export default function PlanetaScene({ stateRef, onVoltarParaNave }: Props) {
   return (
     <div className="planeta-scene">
       <h2>{NOME_PLANETA}</h2>
-      <p className="dica">WASD/setas pra andar · chegue perto do depósito e aperte E pra minerar {ITEM_COLETADO}</p>
+      <p className="dica">WASD/setas pra andar · chegue perto de um depósito e aperte E pra coletar</p>
       <canvas ref={canvasRef} width={CANVAS_W} height={CANVAS_H} className="planeta-canvas" />
 
       <div className="hud">

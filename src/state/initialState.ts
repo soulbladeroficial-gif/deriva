@@ -36,6 +36,8 @@ export function createInitialState(): GameState {
       'Liga Anticorrosiva': 5,
       'Seiva Cristalizada': 5,
       Tungstênio: 5,
+      'Prata Condutora': 5,
+      'Liga Supercondutora': 5,
     },
     construcoes: {},
     posicao: { x: 400, y: 260 },
