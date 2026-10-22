@@ -64,6 +64,8 @@ O jogador constrói do zero. A maioria tem **níveis de upgrade** (1, 2, 3), cad
 - **Biorreator de Algas** — biomassa + energia → O2 da nave; mais lento, não gasta água.
 - **Derretedor de Gelo** — gelo espacial + energia → água.
 - **Estufa/Hidroponia** — água + energia + tempo → comida.
+- **Geladeira** — reduz a velocidade de vencimento dos alimentos perecíveis armazenados; cada nível reduz mais (N1 pouco, N3 quase trava o vencimento).
+- **Fornalha** — processa um alimento cru perecível + combustível em uma versão "preparada": mais saciedade e para de vencer (ou vence muito mais devagar). Funciona com qualquer um dos 3 perecíveis, não só carne.
 
 ### Fabricação
 - **Oficina** — metal bruto → peças/componentes (insumo de reparo do casco e de upgrades).
@@ -144,7 +146,27 @@ Equipamento do jogador, upa via Bancada de Upgrade.
 | Carapaça Quitinosa | Fauna | incomum |
 | Escama Blindada | Fauna | raro |
 
-**Orgânico, Energético, Exótico**: ainda não definidos — Estrutural foi a primeira categoria a ser detalhada.
+**Orgânico** (fechado)
+
+| Material | Classe | Perecível? | Uso |
+|---|---|---|---|
+| Biomassa Comum | Vegetação | não | comida básica; alimenta o Biorreator de Algas |
+| Fruta Silvestre | Vegetação | sim | comida, mais saciedade que Raiz Fibrosa |
+| Raiz Fibrosa | Vegetação | não | comida, sacia menos |
+| Esporo Nutritivo | Vegetação | não | comida de alto valor |
+| Proteína de Caça | Fauna (só planeta c/ fauna) | sim | comida de alto valor |
+| Gordura Animal | Fauna | não | comida de reserva |
+| Ovo/Ninhada | Fauna | sim | raro, alto valor nutricional |
+| Água Pura | Gelo/Fluidos | não | sacia sede; alimenta Eletrolisador e Estufa |
+| Gelo Comum | Gelo/Fluidos | não | derrete no Derretedor de Gelo → Água Pura |
+| Água Mineral | Gelo/Fluidos | não | sacia mais sede por unidade |
+
+**Processados na Fornalha** (perecível + combustível → versão preparada, sem vencimento/vence bem mais devagar, mais saciedade):
+- Proteína de Caça → Proteína Preparada
+- Ovo/Ninhada → Ovo Cozido
+- Fruta Silvestre → Fruta Desidratada
+
+**Energético, Exótico**: ainda não definidos.
 
 ## Receitas de construção (Estrutural)
 
@@ -172,10 +194,12 @@ Cada categoria de construção tem sua própria "linha" de material incomum/raro
 | Estação de Drones (limite, fábrica) | — | Liga de Impulso + Carapaça Quitinosa | Núcleo de Impulso Avançado + Escama Blindada + Liga Blindada |
 | Biorreator de Algas | Fibra Lenhosa + Casca Fibrosa | Resina Endurecida | Seiva Cristalizada |
 | Estufa/Hidroponia | Fibra Lenhosa + Casca Fibrosa | Resina Endurecida + Fibra Lenhosa | Seiva Cristalizada |
+| Geladeira | Ferro-Níquel + Cobre Nativo | Alumínio Purificado | Liga Anticorrosiva |
+| Fornalha | Ferro-Níquel + Basalto Denso | Alumínio Purificado | Liga Anticorrosiva |
 
 ## Pendências
 
 - Mecânica de automação entre bancadas (ideia inicial rejeitada, revisar).
 - Classes de planeta/bioma (só rascunho inicial, não confirmado).
-- Itens Orgânicos, Energéticos e Exóticos específicos.
+- Itens Energéticos e Exóticos específicos.
 - Nomes e receitas específicas do Triturador (ex: quais itens exóticos existem e o que cada um gera).
