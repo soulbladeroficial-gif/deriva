@@ -184,7 +184,42 @@ Regra geral: qualquer combustível funciona em qualquer construção que precise
 | Urânio | Rochas | raro | 30 | **exclusivo do Reator Nuclear** — não funciona em mais nada |
 | Pó de Tório | Rochas | muito raro | 32 | +35% energia no Reator Auxiliar Avançado |
 
-**Exótico**: ainda não definido.
+**Exótico** (fechado)
+
+Achados/objetos estranhos da classe Anomalias, só servem de input pro Triturador. Saída normalmente Estrutural, às vezes Energético ou Orgânico (marcado como exceção).
+
+| Item exótico | Raridade | Vira no Triturador |
+|---|---|---|
+| Motor Velho | comum | 2 Ferro-Níquel + 1 Titânio Bruto |
+| Caixa de Ferramentas Enferrujada | comum | 3 Ferro-Níquel + 1 Aço Temperado |
+| Painel de Casco Amassado | comum | 2 Basalto Denso + 1 Ferro-Níquel |
+| Cabo Elétrico Emaranhado | comum | 2 Cobre Nativo |
+| Suporte Metálico Quebrado | comum | 2 Ferro-Níquel |
+| Carcaça de Equipamento | comum | 2 Basalto Denso + 1 Cobre Nativo |
+| Tanque Vazio Amassado | comum | 2 Ferro-Níquel + 1 Basalto Denso |
+| Engrenagem Enferrujada | comum | 1 Aço Temperado + 1 Ferro-Níquel |
+| Tubulação Entortada | comum | 2 Cobre Nativo + 1 Ferro-Níquel |
+| Placa de Revestimento Rachada | comum | 2 Basalto Denso |
+| Núcleo de Drone Abandonado | incomum | 1 Liga de Impulso + 1 Carapaça Quitinosa |
+| Gerador Portátil Danificado | incomum | 1 Prata Condutora + 1 Ferro-Níquel |
+| Filtro de Ar Entupido | incomum | 1 Alumínio Purificado |
+| Caixa de Ferramentas Avançada | incomum | 1 Aço Temperado + 1 Titânio Bruto |
+| Capacete de Traje Rasgado | incomum | 1 Carapaça Quitinosa + 1 Couro Reforçado |
+| Sensor Quebrado | incomum | 1 Liga de Impulso |
+| Compartimento Selado | incomum | 1 Resina Endurecida + 1 Titânio Bruto |
+| Recipiente Pressurizado | incomum | 1 Nitrogênio Comprimido *(exceção: Energético)* |
+| Contêiner Biológico Vazado | incomum | 1 Biomassa Comum + 1 Água Pura *(exceção: Orgânico)* |
+| Antena Dessincronizada | incomum | 1 Prata Condutora + 1 Cobre Nativo |
+| Fragmento de Casco Blindado | raro | 1 Liga Blindada + 1 Escama Blindada |
+| Bateria Alienígena | raro | 2 Cristal de Energia *(exceção: Energético)* |
+| Cápsula Criogênica | raro | 2 Água Pura + 1 Biomassa Comum *(exceção: Orgânico)* |
+| Núcleo de Reator Fragmentado | raro | 1 Liga Supercondutora |
+| Casco de Sonda Estranha | raro | 1 Liga de Impulso + 1 Núcleo de Impulso Avançado |
+| Amostra de Liga Desconhecida | raro | 2 Titânio Bruto + 1 Liga Anticorrosiva |
+| Tanque de Combustível Intacto | raro | 1 Plasma Condensado *(exceção: Energético)* |
+| Artefato Anômalo Pulsante | muito raro | 1 Pó de Tório *(exceção: Energético)* |
+| Núcleo de Máquina Desconhecida | muito raro | 2 Liga Supercondutora + 1 Liga Blindada |
+| Casulo Biológico Selado | muito raro | 2 Esporo Nutritivo + 1 Seiva Cristalizada *(exceção: Orgânico)* |
 
 ## Receitas de construção (Estrutural)
 
@@ -220,5 +255,4 @@ Cada categoria de construção tem sua própria "linha" de material incomum/raro
 
 - Mecânica de automação entre bancadas (ideia inicial rejeitada, revisar).
 - Classes de planeta/bioma (só rascunho inicial, não confirmado).
-- Itens Exóticos específicos.
-- Nomes e receitas específicas do Triturador (ex: quais itens exóticos existem e o que cada um gera).
+- Receitas de upgrade das Ferramentas pessoais (Traje, Ferramenta de Coleta, Scanner Pessoal, Arma Pessoal) — ainda só descritas conceitualmente, sem materiais específicos por nível.
