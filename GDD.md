@@ -46,6 +46,8 @@ Vêm com a nave desde o início — **não se constroem, só se melhoram**.
 - **Reator Principal** — gera a energia base da nave.
 - **Estação de Recarga de Traje** — enche o tanque de O2 do traje do jogador, puxando do O2 da nave.
 - **Estação de Drones** — os drones minerizam **asteroides soltos no espaço** durante a viagem (não precisam de planeta), consumindo energia pra operar. Upa por dois caminhos: (1) limite de drones (adiciona um novo), (2) melhorias **individuais** por drone — nunca "upa todos de uma vez". Algumas melhorias são gerais (velocidade, carga), outras especializam o que o drone traz (ex: focado em gelo, focado em minério raro). O painel mostra, de forma **visual/dinâmica** (não tabela), onde cada drone está, quanto tempo falta pra voltar, e quanta carga tem.
+- **Propulsor** — reduz o tempo de viagem. (a nave já viaja desde o início, não tem como não ter propulsor)
+- **Scanner de Longo Alcance** — prévia do que tem nos planetas próximos antes de decidir desviar. (idem — sem scanner não daria pra nem detectar os planetas no caminho)
 
 ## Construções
 
@@ -76,10 +78,6 @@ O jogador constrói do zero. A maioria tem **níveis de upgrade** (1, 2, 3), cad
 ### Logística
 - **Expansão do Porão de Carga** (nave) — mais armazenamento geral.
 - **Expansão da Mochila** (jogador) — mais capacidade de carga durante exploração no planeta. Cria uma decisão real: mochila pequena = mais viagens de ida e volta à nave = mais risco de gastar oxigênio à toa.
-
-### Propulsão/Navegação
-- **Propulsor** — reduz o tempo de viagem.
-- **Scanner de Longo Alcance** — prévia do que tem nos planetas próximos.
 
 ## Ferramentas pessoais
 
@@ -120,23 +118,60 @@ Equipamento do jogador, upa via Bancada de Upgrade.
 
 ### Itens definidos até agora
 
-**Estrutural**
+**Estrutural** (fechado)
 
-| Item | Classe | Raridade |
+| Material | Classe | Raridade |
 |---|---|---|
 | Ferro-Níquel | Rochas | comum |
 | Cobre Nativo | Rochas | comum |
-| Titânio Bruto | Rochas | incomum |
-| Tungstênio | Rochas | raro |
 | Basalto Denso | Rochas | comum |
+| Prata Condutora | Rochas | incomum |
+| Alumínio Purificado | Rochas | incomum |
+| Aço Temperado | Rochas | incomum |
+| Titânio Bruto | Rochas | incomum |
+| Liga de Impulso | Rochas | incomum |
+| Liga Supercondutora | Rochas | raro |
+| Liga Anticorrosiva | Rochas | raro |
+| Tungstênio | Rochas | raro |
+| Liga Blindada | Rochas | raro |
+| Núcleo de Impulso Avançado | Rochas | raro |
 | Fibra Lenhosa | Vegetação | comum |
 | Casca Fibrosa | Vegetação | comum |
 | Resina Endurecida | Vegetação | incomum |
+| Seiva Cristalizada | Vegetação | raro |
 | Osso Denso | Fauna | comum |
 | Couro Reforçado | Fauna | comum |
 | Carapaça Quitinosa | Fauna | incomum |
+| Escama Blindada | Fauna | raro |
 
 **Orgânico, Energético, Exótico**: ainda não definidos — Estrutural foi a primeira categoria a ser detalhada.
+
+## Receitas de construção (Estrutural)
+
+Cada categoria de construção tem sua própria "linha" de material incomum/raro, pra não convergir tudo nos mesmos 2 itens. Construções que vêm de fábrica (sem "Construir") só têm custo de upgrade.
+
+| Construção | Construir | N2 | N3 |
+|---|---|---|---|
+| Gerador a Combustível | Ferro-Níquel + Basalto Denso | Prata Condutora | Liga Supercondutora |
+| Painel Solar | Cobre Nativo + Ferro-Níquel + Fibra Lenhosa | Prata Condutora | Liga Supercondutora |
+| Otimizador de Rede | Cobre Nativo | Prata Condutora | Liga Supercondutora |
+| Reator Auxiliar Avançado | Ferro-Níquel + Prata Condutora | Liga Supercondutora | 2x Liga Supercondutora + Seiva Cristalizada |
+| Reator Principal (fábrica) | — | Prata Condutora | Liga Supercondutora |
+| Eletrolisador | Ferro-Níquel + Cobre Nativo | Alumínio Purificado + Resina Endurecida | Liga Anticorrosiva |
+| Derretedor de Gelo | Ferro-Níquel + Basalto Denso | Alumínio Purificado | Liga Anticorrosiva |
+| Estação de Recarga de Traje (fábrica) | — | Alumínio Purificado | Liga Anticorrosiva |
+| Oficina | Ferro-Níquel + Basalto Denso | Aço Temperado | Tungstênio |
+| Bancada de Upgrade | Ferro-Níquel + Cobre Nativo | Aço Temperado | Tungstênio |
+| Triturador | Ferro-Níquel + Osso Denso | Aço Temperado + Carapaça Quitinosa | Tungstênio + Escama Blindada |
+| Torreta (Auto + Mira Manual) | Ferro-Níquel + Titânio Bruto | Titânio Bruto | Liga Blindada |
+| Blindagem/Amortecedor | Couro Reforçado + Osso Denso | Carapaça Quitinosa | Escama Blindada |
+| Expansão do Porão | Basalto Denso + Ferro-Níquel + Casca Fibrosa | Titânio Bruto | Liga Blindada |
+| Expansão da Mochila | Couro Reforçado + Osso Denso | Carapaça Quitinosa | Escama Blindada |
+| Propulsor (fábrica) | — | Liga de Impulso | Núcleo de Impulso Avançado |
+| Scanner de Longo Alcance (fábrica) | — | Liga de Impulso + Couro Reforçado | Núcleo de Impulso Avançado |
+| Estação de Drones (limite, fábrica) | — | Liga de Impulso + Carapaça Quitinosa | Núcleo de Impulso Avançado + Escama Blindada + Liga Blindada |
+| Biorreator de Algas | Fibra Lenhosa + Casca Fibrosa | Resina Endurecida | Seiva Cristalizada |
+| Estufa/Hidroponia | Fibra Lenhosa + Casca Fibrosa | Resina Endurecida + Fibra Lenhosa | Seiva Cristalizada |
 
 ## Pendências
 
