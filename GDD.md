@@ -46,7 +46,7 @@ Vêm com a nave desde o início — **não se constroem, só se melhoram**.
 
 - **Reator Principal** — gera a energia base da nave.
 - **Estação de Recarga de Traje** — enche o tanque de O2 do traje do jogador, puxando do O2 da nave.
-- **Estação de Drones** — os drones minerizam **asteroides soltos no espaço** durante a viagem (não precisam de planeta), consumindo energia pra operar. Também aceita **combustível opcional** (o Octano dá bônus de produtividade aqui — ver Materiais Energéticos). Upa por dois caminhos: (1) limite de drones (adiciona um novo), (2) melhorias **individuais** por drone — nunca "upa todos de uma vez". Algumas melhorias são gerais (velocidade, carga), outras especializam o que o drone traz (ex: focado em gelo, focado em minério raro). O painel mostra, de forma **visual/dinâmica** (não tabela), onde cada drone está, quanto tempo falta pra voltar, e quanta carga tem.
+- **Estação de Drones** — os drones minerizam **asteroides soltos no espaço** durante a viagem (não precisam de planeta), consumindo energia pra operar. Também aceita **qualquer combustível como opcional** (mesma regra universal dos outros consumidores de combustível), e o Octano especificamente dá bônus de produtividade aqui (ver Materiais Energéticos). Upa por dois caminhos: (1) limite de drones (adiciona um novo), (2) melhorias **individuais** por drone — nunca "upa todos de uma vez". Algumas melhorias são gerais (velocidade, carga), outras especializam o que o drone traz (ex: focado em gelo, focado em minério raro). O painel mostra, de forma **visual/dinâmica** (não tabela), onde cada drone está, quanto tempo falta pra voltar, e quanta carga tem.
 - **Propulsor** — reduz o tempo de viagem. (a nave já viaja desde o início, não tem como não ter propulsor)
 - **Scanner de Longo Alcance** — prévia do que tem nos planetas próximos antes de decidir desviar. (idem — sem scanner não daria pra nem detectar os planetas no caminho). Progressão por nível:
   - N1 (base): só detecta que existe um planeta próximo, sem detalhe.
@@ -110,7 +110,23 @@ Equipamento do jogador, upa via Bancada de Upgrade. Todas têm **5 níveis** (s�
 
 - Cada planeta nasce de uma **classe/bioma**, que define: habitabilidade, pool de recursos possíveis, tipo de fauna, estilo de geração de terreno e estruturas típicas.
 - Fauna: sem fauna / passiva (não ataca, pode fugir ou não) / agressiva (ataca, reduz a Vida do jogador).
-- **Fauna agressiva** segue um modelo base de 3 stats: **Vida** (quanto aguenta até morrer), **Dano** (quanto tira da Vida do jogador por ataque) e **Comportamento** (persegue ao avistar / emboscada quando o jogador se aproxima demais / territorial, só ataca se o jogador entrar numa área). Cada classe de planeta com fauna agressiva usa esses 3 stats pra definir seus bichos — os números específicos de cada espécie ficam pra quando formos balancear o combate de verdade.
+- **Fauna agressiva** segue um modelo base de 3 stats: **Vida** (quanto aguenta até morrer), **Dano** (quanto tira da Vida do jogador por ataque) e **Comportamento** (persegue ao avistar / emboscada quando o jogador se aproxima demais / territorial, só ataca se o jogador entrar numa área). Os números específicos de cada espécie ficam pra quando formos balancear o combate de verdade.
+- Assim como o planeta, a fauna tem **design visual e cor próprios por classe**, com a cor variando por instância (mesma lógica da seed dos planetas) pra nenhum encontro parecer repetido.
+
+### Fauna por classe de planeta
+
+Das 15 classes, 8 têm fauna. Habitabilidade ruim → fauna mais forte (reforça o risco do ambiente); habitabilidade boa → fauna mais fraca ou majoritariamente passiva (compensa o ambiente amigável). Comportamento reflete o terreno: campo aberto = persegue, água/escuro = emboscada, território de recurso raro = territorial.
+
+| Classe | Comportamento (agressiva) | Força | Design visual | Nota |
+|---|---|---|---|---|
+| Tundra Ventosa | Persegue | Média-alta | Pelagem grossa, corpo robusto e baixo (resiste ao vento) | — |
+| Savana Radioativa | Territorial/Persegue | Alta | Mutações visíveis: manchas luminescentes, deformidades leves | Guarda a área contaminada |
+| Floresta Bioluminescente | Emboscada | Média | Padrões bioluminescentes na pele, camuflagem na vegetação | Passiva não percebe até perto |
+| Planície Fúngica | — | — | Textura esponjosa/coberta de esporo, cores suaves | Passiva majoritária |
+| Oceânico/Pântano | Emboscada | Alta | Pele viscosa/escamosa, cores escuras (camuflagem na água/lama) | — |
+| Arquipélago Tempestuoso | Persegue | Média | Plumagem adaptada a vento/água, cores vibrantes | Passiva são aves calmas |
+| Caverna Subterrânea | Territorial/Emboscada | Alta | Sem olhos (ou atrofiados), pele pálida/translúcida | Adaptado ao escuro total |
+| Recife Flutuante | Persegue | Média | Corpo leve/aerodinâmico, membranas pra planar, cores vivas | Passiva são voadores pacíficos |
 - Jogo é **2D com movimentação livre**. Terreno gerado em malha de blocos: **Obstáculo** (impede passagem — montanha, construção), **Chão** (livre acesso), **Nado** (água — rio, lago), **Abismo** (morte — queda, lava).
 - Cada planeta tem sua própria **seed**, gerando terreno único mesmo entre planetas da mesma classe. Cada classe tem textura/design próprios; a cor varia por instância pra reforçar a sensação de novidade a cada visita.
 
