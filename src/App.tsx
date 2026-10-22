@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import NaveScene from './scenes/NaveScene'
 import './App.css'
 
 type Screen = 'inicio' | 'nave'
@@ -7,11 +8,7 @@ function App() {
   const [screen, setScreen] = useState<Screen>('inicio')
 
   if (screen === 'nave') {
-    return (
-      <div className="screen screen-nave">
-        <h2>Nave</h2>
-      </div>
-    )
+    return <NaveScene />
   }
 
   return (
