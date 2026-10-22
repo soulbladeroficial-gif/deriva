@@ -11,7 +11,7 @@ Planeta de origem destruído. O jogador está a bordo de uma nave rumo ao planet
 Dois loops conectados:
 
 - **Nave** — gestão/construção: cuidar da saúde da nave, construir, melhorar ferramentas, consertar quando dá problema, gerenciar energia, se alimentar, beber água, investir em drones de coleta.
-- **Planeta** — exploração: busca de recursos. O planeta em si é ilimitado, mas o oxigênio do traje do jogador não — isso é o que limita a exploração, não o tamanho do planeta. Pode ter monstros ou não; planetas variam em habitabilidade.
+- **Planeta** — exploração: busca de recursos. O planeta em si é ilimitado, mas o oxigênio do traje do jogador não — isso é o que limita a exploração, não o tamanho do planeta. Pode ter fauna (passiva ou agressiva) ou não; planetas variam em habitabilidade.
 
 ## Sessão
 
@@ -29,7 +29,7 @@ Dois loops conectados:
 | Oxigênio da nave | Reserva enorme, quase nunca é um problema prático — é o orçamento de longo prazo da viagem toda. |
 | Fome / Sede (jogador) | Saciados consumindo itens de comida/água do inventário (não são medidores próprios, dependem de itens). |
 | Oxigênio do traje | Tanque pessoal do jogador — é o verdadeiro limite da exploração em planeta. Capacidade é um upgrade do Traje Espacial, não um item separado. |
-| Vida do jogador | Reduzida por ataque de fauna agressiva. Chega a 0 = morte (a causa "pelo planeta" já prevista). Recupera descansando ou com item de cura. |
+| Vida do jogador | Reduzida por ataque de fauna agressiva. Chega a 0 = morte (a causa "pelo planeta" já prevista). Recupera descansando (Dormitório) ou consumindo **Erva Medicinal** (item de cura — ver Materiais Orgânicos). |
 
 ## Navegação
 
@@ -46,13 +46,16 @@ Vêm com a nave desde o início — **não se constroem, só se melhoram**.
 
 - **Reator Principal** — gera a energia base da nave.
 - **Estação de Recarga de Traje** — enche o tanque de O2 do traje do jogador, puxando do O2 da nave.
-- **Estação de Drones** — os drones minerizam **asteroides soltos no espaço** durante a viagem (não precisam de planeta), consumindo energia pra operar. Upa por dois caminhos: (1) limite de drones (adiciona um novo), (2) melhorias **individuais** por drone — nunca "upa todos de uma vez". Algumas melhorias são gerais (velocidade, carga), outras especializam o que o drone traz (ex: focado em gelo, focado em minério raro). O painel mostra, de forma **visual/dinâmica** (não tabela), onde cada drone está, quanto tempo falta pra voltar, e quanta carga tem.
+- **Estação de Drones** — os drones minerizam **asteroides soltos no espaço** durante a viagem (não precisam de planeta), consumindo energia pra operar. Também aceita **combustível opcional** (o Octano dá bônus de produtividade aqui — ver Materiais Energéticos). Upa por dois caminhos: (1) limite de drones (adiciona um novo), (2) melhorias **individuais** por drone — nunca "upa todos de uma vez". Algumas melhorias são gerais (velocidade, carga), outras especializam o que o drone traz (ex: focado em gelo, focado em minério raro). O painel mostra, de forma **visual/dinâmica** (não tabela), onde cada drone está, quanto tempo falta pra voltar, e quanta carga tem.
 - **Propulsor** — reduz o tempo de viagem. (a nave já viaja desde o início, não tem como não ter propulsor)
-- **Scanner de Longo Alcance** — prévia do que tem nos planetas próximos antes de decidir desviar. (idem — sem scanner não daria pra nem detectar os planetas no caminho)
+- **Scanner de Longo Alcance** — prévia do que tem nos planetas próximos antes de decidir desviar. (idem — sem scanner não daria pra nem detectar os planetas no caminho). Progressão por nível:
+  - N1 (base): só detecta que existe um planeta próximo, sem detalhe.
+  - N2: revela a classe do planeta (bioma) e a habitabilidade.
+  - N3: revela também quais classes de extração estão presentes e o tipo de fauna (sem/passiva/agressiva). Exceção: planeta **Híbrido** nunca revela a combinação exata, só o rótulo "Híbrido" — mesmo em N3.
 
 ## Construções
 
-O jogador constrói do zero. A maioria tem **níveis de upgrade** (1, 2, 3), cada nível pedindo um material específico.
+O jogador constrói do zero. A maioria tem **níveis de upgrade** (1, 2, 3), cada nível pedindo um ou mais materiais específicos, em quantidade definida (ver receitas completas mais abaixo).
 
 ### Energia
 - **Gerador a Combustível** — queima combustível coletado; geração alta, limitada ao estoque.
@@ -87,9 +90,14 @@ O jogador constrói do zero. A maioria tem **níveis de upgrade** (1, 2, 3), cad
 
 Equipamento do jogador, upa via Bancada de Upgrade. Todas têm **5 níveis** (são intrínsecas ao usuário, não construções da nave).
 
-- **Traje Espacial** — reduz consumo de O2 externo; a capacidade do tanque de O2 é um upgrade dele (não é item equipável separado). Leva dano quando o jogador é atacado por fauna agressiva — isso piora o consumo de O2 até ser reparado (Oficina/Bancada).
+- **Traje Espacial** — reduz consumo de O2 externo; a capacidade do tanque de O2 é um upgrade dele (não é item equipável separado). Leva dano quando o jogador é atacado por fauna agressiva — isso piora o consumo de O2 até ser reparado. Reparo usa os mesmos materiais do nível atual do Traje (a linha Fauna da tabela de receitas), não é uma receita separada.
 - **Ferramenta de Coleta** — extrai matéria-prima de Rochas, Vegetação e Gelo/Fluidos. **Não é necessária pra Fauna** — matar o animal já dá o material direto. Upgrade: velocidade de coleta vs. consumo de energia do traje.
-- **Scanner Pessoal** — diferente do Scanner de Longo Alcance (que é da nave); revela depósitos escondidos e perigos próximos dentro do planeta. Upgrade: raio de detecção.
+- **Scanner Pessoal** — diferente do Scanner de Longo Alcance (que é da nave); revela depósitos escondidos e perigos próximos dentro do planeta. Progressão por nível:
+  - N1: detecta depósitos de recurso em alcance curto.
+  - N2: aumenta o alcance de detecção de recurso.
+  - N3: passa a detectar também fauna próxima (perigo) dentro do alcance.
+  - N4: aumenta ainda mais o alcance e passa a detectar Anomalias (mais raras/escondidas).
+  - N5: alcance máximo; mostra densidade aproximada do que foi detectado.
 - **Extrator de Gás** — ferramenta dedicada à classe Furos, pra coletar gás com segurança.
 - **Armas pessoais** (3 tipos, não precisam ser construídas no início — o jogador não começa com elas):
   - **Faca** — corpo a corpo, não gasta munição, mas precisa chegar perto (mais risco de levar dano).
@@ -102,6 +110,7 @@ Equipamento do jogador, upa via Bancada de Upgrade. Todas têm **5 níveis** (s�
 
 - Cada planeta nasce de uma **classe/bioma**, que define: habitabilidade, pool de recursos possíveis, tipo de fauna, estilo de geração de terreno e estruturas típicas.
 - Fauna: sem fauna / passiva (não ataca, pode fugir ou não) / agressiva (ataca, reduz a Vida do jogador).
+- **Fauna agressiva** segue um modelo base de 3 stats: **Vida** (quanto aguenta até morrer), **Dano** (quanto tira da Vida do jogador por ataque) e **Comportamento** (persegue ao avistar / emboscada quando o jogador se aproxima demais / territorial, só ataca se o jogador entrar numa área). Cada classe de planeta com fauna agressiva usa esses 3 stats pra definir seus bichos — os números específicos de cada espécie ficam pra quando formos balancear o combate de verdade.
 - Jogo é **2D com movimentação livre**. Terreno gerado em malha de blocos: **Obstáculo** (impede passagem — montanha, construção), **Chão** (livre acesso), **Nado** (água — rio, lago), **Abismo** (morte — queda, lava).
 - Cada planeta tem sua própria **seed**, gerando terreno único mesmo entre planetas da mesma classe. Cada classe tem textura/design próprios; a cor varia por instância pra reforçar a sensação de novidade a cada visita.
 
@@ -203,7 +212,7 @@ Classificação própria (não uma das 15), ~3-5% de chance em qualquer planeta 
   - **Fauna** — obtido de criaturas (caça ou coleta de restos).
   - **Gelo/Fluidos** — geleiras, poças, lagos congelados.
   - **Anomalias** — estruturas estranhas, destroços, fenômenos — fonte exclusiva do Exótico.
-  - **Furos** — aberturas/fumarolas no chão que soltam gás continuamente; mais comuns em planetas de atmosfera densa.
+  - **Furos** — aberturas/fumarolas no chão que soltam gás continuamente.
 - **Classes válidas por categoria**:
   - Estrutural → Rochas, Vegetação, Fauna
   - Orgânico → Vegetação, Fauna, Gelo/Fluidos
@@ -264,6 +273,7 @@ Classificação própria (não uma das 15), ~3-5% de chance em qualquer planeta 
 | Água Pura | Gelo/Fluidos | não | sacia sede; alimenta Eletrolisador e Estufa |
 | Gelo Comum | Gelo/Fluidos | não | derrete no Derretedor de Gelo → Água Pura |
 | Água Mineral | Gelo/Fluidos | não | sacia mais sede por unidade |
+| Erva Medicinal | Vegetação | não | item de cura — consumida diretamente, recupera Vida do jogador |
 
 **Processados na Fornalha** (perecível + combustível → versão preparada, sem vencimento/vence bem mais devagar, mais saciedade):
 - Proteína de Caça → Proteína Preparada
@@ -330,29 +340,29 @@ Cada categoria de construção tem sua própria "linha" de material incomum/raro
 
 | Construção | Construir | N2 | N3 |
 |---|---|---|---|
-| Gerador a Combustível | Ferro-Níquel + Basalto Denso | Prata Condutora | Liga Supercondutora |
-| Painel Solar | Cobre Nativo + Ferro-Níquel + Fibra Lenhosa | Prata Condutora | Liga Supercondutora |
-| Otimizador de Rede | Cobre Nativo | Prata Condutora | Liga Supercondutora |
-| Reator Auxiliar Avançado | Ferro-Níquel + Prata Condutora | Liga Supercondutora | 2x Liga Supercondutora + Seiva Cristalizada |
-| Reator Principal (fábrica) | — | Prata Condutora | Liga Supercondutora |
-| Reator Nuclear | Ferro-Níquel + Prata Condutora | Liga Supercondutora | 2x Liga Supercondutora |
-| Eletrolisador | Ferro-Níquel + Cobre Nativo | Alumínio Purificado + Resina Endurecida | Liga Anticorrosiva |
-| Derretedor de Gelo | Ferro-Níquel + Basalto Denso | Alumínio Purificado | Liga Anticorrosiva |
-| Estação de Recarga de Traje (fábrica) | — | Alumínio Purificado | Liga Anticorrosiva |
-| Oficina | Ferro-Níquel + Basalto Denso | Aço Temperado | Tungstênio |
-| Bancada de Upgrade | Ferro-Níquel + Cobre Nativo | Aço Temperado | Tungstênio |
-| Triturador | Ferro-Níquel + Osso Denso | Aço Temperado + Carapaça Quitinosa | Tungstênio + Escama Blindada |
-| Torreta (Auto + Mira Manual) | Ferro-Níquel + Titânio Bruto | Titânio Bruto | Liga Blindada |
-| Blindagem/Amortecedor | Couro Reforçado + Osso Denso | Carapaça Quitinosa | Escama Blindada |
-| Expansão do Porão | Basalto Denso + Ferro-Níquel + Casca Fibrosa | Titânio Bruto | Liga Blindada |
-| Expansão da Mochila | Couro Reforçado + Osso Denso | Carapaça Quitinosa | Escama Blindada |
-| Propulsor (fábrica) | — | Liga de Impulso | Núcleo de Impulso Avançado |
-| Scanner de Longo Alcance (fábrica) | — | Liga de Impulso + Couro Reforçado | Núcleo de Impulso Avançado |
-| Estação de Drones (limite, fábrica) | — | Liga de Impulso + Carapaça Quitinosa | Núcleo de Impulso Avançado + Escama Blindada + Liga Blindada |
-| Biorreator de Algas | Fibra Lenhosa + Casca Fibrosa | Resina Endurecida | Seiva Cristalizada |
-| Estufa/Hidroponia | Fibra Lenhosa + Casca Fibrosa | Resina Endurecida + Fibra Lenhosa | Seiva Cristalizada |
-| Geladeira | Ferro-Níquel + Cobre Nativo | Alumínio Purificado | Liga Anticorrosiva |
-| Fornalha | Ferro-Níquel + Basalto Denso | Alumínio Purificado | Liga Anticorrosiva |
+| Gerador a Combustível | 3 Ferro-Níquel + 2 Basalto Denso | 2 Prata Condutora | 2 Liga Supercondutora |
+| Painel Solar | 2 Cobre Nativo + 2 Ferro-Níquel + 1 Fibra Lenhosa | 2 Prata Condutora | 2 Liga Supercondutora |
+| Otimizador de Rede | 4 Cobre Nativo | 2 Prata Condutora | 2 Liga Supercondutora |
+| Reator Auxiliar Avançado | 3 Ferro-Níquel + 2 Prata Condutora | 2 Liga Supercondutora | 2 Liga Supercondutora + 1 Seiva Cristalizada |
+| Reator Principal (fábrica) | — | 2 Prata Condutora | 2 Liga Supercondutora |
+| Reator Nuclear | 3 Ferro-Níquel + 2 Prata Condutora | 2 Liga Supercondutora | 2 Liga Supercondutora |
+| Eletrolisador | 3 Ferro-Níquel + 2 Cobre Nativo | 2 Alumínio Purificado + 1 Resina Endurecida | 2 Liga Anticorrosiva |
+| Derretedor de Gelo | 3 Ferro-Níquel + 2 Basalto Denso | 2 Alumínio Purificado | 2 Liga Anticorrosiva |
+| Estação de Recarga de Traje (fábrica) | — | 2 Alumínio Purificado | 2 Liga Anticorrosiva |
+| Oficina | 4 Ferro-Níquel + 2 Basalto Denso | 2 Aço Temperado | 2 Tungstênio |
+| Bancada de Upgrade | 3 Ferro-Níquel + 2 Cobre Nativo | 2 Aço Temperado | 2 Tungstênio |
+| Triturador | 3 Ferro-Níquel + 2 Osso Denso | 2 Aço Temperado + 1 Carapaça Quitinosa | 2 Tungstênio + 1 Escama Blindada |
+| Torreta (Auto + Mira Manual) | 3 Ferro-Níquel + 2 Titânio Bruto | 2 Titânio Bruto | 2 Liga Blindada |
+| Blindagem/Amortecedor | 4 Couro Reforçado + 2 Osso Denso | 2 Carapaça Quitinosa | 2 Escama Blindada |
+| Expansão do Porão | 4 Basalto Denso + 2 Ferro-Níquel + 1 Casca Fibrosa | 2 Titânio Bruto | 2 Liga Blindada |
+| Expansão da Mochila | 2 Couro Reforçado + 1 Osso Denso | 1 Carapaça Quitinosa | 1 Escama Blindada |
+| Propulsor (fábrica) | — | 2 Liga de Impulso | 2 Núcleo de Impulso Avançado |
+| Scanner de Longo Alcance (fábrica) | — | 2 Liga de Impulso + 1 Couro Reforçado | 2 Núcleo de Impulso Avançado |
+| Estação de Drones (limite, fábrica) | — | 2 Liga de Impulso + 1 Carapaça Quitinosa | 2 Núcleo de Impulso Avançado + 1 Escama Blindada + 1 Liga Blindada |
+| Biorreator de Algas | 3 Fibra Lenhosa + 2 Casca Fibrosa | 2 Resina Endurecida | 2 Seiva Cristalizada |
+| Estufa/Hidroponia | 4 Fibra Lenhosa + 2 Casca Fibrosa | 2 Resina Endurecida + 1 Fibra Lenhosa | 2 Seiva Cristalizada |
+| Geladeira | 3 Ferro-Níquel + 2 Cobre Nativo | 2 Alumínio Purificado | 2 Liga Anticorrosiva |
+| Fornalha | 3 Ferro-Níquel + 2 Basalto Denso | 2 Alumínio Purificado | 2 Liga Anticorrosiva |
 
 ## Receitas de ferramentas pessoais (Estrutural)
 
