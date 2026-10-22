@@ -7,27 +7,28 @@ export interface ConversorSpec {
   produzO2Nave?: number
 }
 
-export function updateConversor(state: GameState, dt: number, spec: ConversorSpec) {
+/** nivel multiplica consumo e produção — nível 2 e 3 rendem mais, consistente com o upgrade. */
+export function updateConversor(state: GameState, dt: number, spec: ConversorSpec, nivel = 1) {
   if (spec.consomeItem) {
-    const consumo = spec.consomeItem.taxa * dt
+    const consumo = spec.consomeItem.taxa * nivel * dt
     const disponivel = state.inventario[spec.consomeItem.item] ?? 0
     if (disponivel < consumo) return
     state.inventario[spec.consomeItem.item] = disponivel - consumo
   }
 
   if (spec.consomeEnergia) {
-    state.nave.energiaConsumida += spec.consomeEnergia
+    state.nave.energiaConsumida += spec.consomeEnergia * nivel
   }
 
   if (spec.produzItem) {
     const atual = state.inventario[spec.produzItem.item] ?? 0
-    state.inventario[spec.produzItem.item] = atual + spec.produzItem.taxa * dt
+    state.inventario[spec.produzItem.item] = atual + spec.produzItem.taxa * nivel * dt
   }
 
   if (spec.produzO2Nave) {
     state.nave.oxigenio = Math.min(
       state.nave.oxigenioMax,
-      state.nave.oxigenio + spec.produzO2Nave * dt,
+      state.nave.oxigenio + spec.produzO2Nave * nivel * dt,
     )
   }
 }

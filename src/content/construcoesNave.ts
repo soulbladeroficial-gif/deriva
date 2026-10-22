@@ -8,9 +8,12 @@ export interface ConstrucaoDef {
   id: string
   nome: string
   posicao: { x: number; y: number }
-  custoConstruir: NivelCusto
+  /** niveis[0] = custo pra construir (nível 1), niveis[1] = custo pra upar pra nível 2, niveis[2] = custo pra upar pra nível 3 */
+  niveis: NivelCusto[]
   conversor?: ConversorSpec
   cor: string
+  /** se true, não precisa de Bancada de Upgrade construída pra evoluir de nível (caso da própria Bancada) */
+  bancada?: boolean
 }
 
 export const CONSTRUCOES: ConstrucaoDef[] = [
@@ -18,7 +21,11 @@ export const CONSTRUCOES: ConstrucaoDef[] = [
     id: 'eletrolisador',
     nome: 'Eletrolisador',
     posicao: { x: 220, y: 180 },
-    custoConstruir: { 'Ferro-Níquel': 3, 'Cobre Nativo': 2 },
+    niveis: [
+      { 'Ferro-Níquel': 3, 'Cobre Nativo': 2 },
+      { 'Alumínio Purificado': 2, 'Resina Endurecida': 1 },
+      { 'Liga Anticorrosiva': 2 },
+    ],
     conversor: {
       consomeItem: { item: 'Água Pura', taxa: 0.05 },
       consomeEnergia: 3,
@@ -30,7 +37,11 @@ export const CONSTRUCOES: ConstrucaoDef[] = [
     id: 'derretedorGelo',
     nome: 'Derretedor de Gelo',
     posicao: { x: 420, y: 150 },
-    custoConstruir: { 'Ferro-Níquel': 3, 'Basalto Denso': 2 },
+    niveis: [
+      { 'Ferro-Níquel': 3, 'Basalto Denso': 2 },
+      { 'Alumínio Purificado': 2 },
+      { 'Liga Anticorrosiva': 2 },
+    ],
     conversor: {
       consomeItem: { item: 'Gelo Comum', taxa: 0.05 },
       consomeEnergia: 2,
@@ -42,7 +53,11 @@ export const CONSTRUCOES: ConstrucaoDef[] = [
     id: 'biorreator',
     nome: 'Biorreator de Algas',
     posicao: { x: 620, y: 180 },
-    custoConstruir: { 'Fibra Lenhosa': 3, 'Casca Fibrosa': 2 },
+    niveis: [
+      { 'Fibra Lenhosa': 3, 'Casca Fibrosa': 2 },
+      { 'Resina Endurecida': 2 },
+      { 'Seiva Cristalizada': 2 },
+    ],
     conversor: {
       consomeItem: { item: 'Biomassa Comum', taxa: 0.03 },
       consomeEnergia: 2,
@@ -54,7 +69,11 @@ export const CONSTRUCOES: ConstrucaoDef[] = [
     id: 'estufa',
     nome: 'Estufa/Hidroponia',
     posicao: { x: 420, y: 400 },
-    custoConstruir: { 'Fibra Lenhosa': 4, 'Casca Fibrosa': 2 },
+    niveis: [
+      { 'Fibra Lenhosa': 4, 'Casca Fibrosa': 2 },
+      { 'Resina Endurecida': 2, 'Fibra Lenhosa': 1 },
+      { 'Seiva Cristalizada': 2 },
+    ],
     conversor: {
       consomeItem: { item: 'Água Pura', taxa: 0.03 },
       consomeEnergia: 2,
@@ -66,12 +85,28 @@ export const CONSTRUCOES: ConstrucaoDef[] = [
     id: 'oficina',
     nome: 'Oficina',
     posicao: { x: 620, y: 400 },
-    custoConstruir: { 'Ferro-Níquel': 4, 'Basalto Denso': 2 },
+    niveis: [
+      { 'Ferro-Níquel': 4, 'Basalto Denso': 2 },
+      { 'Aço Temperado': 2 },
+      { Tungstênio: 2 },
+    ],
     conversor: {
       consomeItem: { item: 'Ferro-Níquel', taxa: 0.05 },
       consomeEnergia: 3,
       produzItem: { item: 'Peças', taxa: 0.03 },
     },
     cor: '#f97316',
+  },
+  {
+    id: 'bancadaUpgrade',
+    nome: 'Bancada de Upgrade',
+    posicao: { x: 150, y: 400 },
+    niveis: [
+      { 'Ferro-Níquel': 3, 'Cobre Nativo': 2 },
+      { 'Aço Temperado': 2 },
+      { Tungstênio: 2 },
+    ],
+    cor: '#a3a3a3',
+    bancada: true,
   },
 ]

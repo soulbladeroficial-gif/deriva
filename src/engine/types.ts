@@ -21,7 +21,7 @@ export interface JogadorState {
 }
 
 export interface ConstrucaoState {
-  construido: boolean
+  nivel: number
 }
 
 export type ConstrucoesState = Record<string, ConstrucaoState>

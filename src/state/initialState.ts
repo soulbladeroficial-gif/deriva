@@ -29,6 +29,13 @@ export function createInitialState(): GameState {
       'Casca Fibrosa': 10,
       'Gelo Comum': 10,
       Peças: 5,
+      // materiais de upgrade (N2/N3) — quantidade só pra testar, balanceamento real vem depois
+      'Alumínio Purificado': 5,
+      'Resina Endurecida': 5,
+      'Aço Temperado': 5,
+      'Liga Anticorrosiva': 5,
+      'Seiva Cristalizada': 5,
+      Tungstênio: 5,
     },
     construcoes: {},
     posicao: { x: 400, y: 260 },

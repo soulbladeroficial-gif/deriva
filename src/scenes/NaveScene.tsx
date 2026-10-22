@@ -6,11 +6,7 @@ import { drawGridFloor } from '../rendering/drawGridFloor'
 import { updateReatorPrincipal } from '../systems/reatorPrincipal'
 import { updateSobrevivencia } from '../systems/sobrevivencia'
 import { updateMovimento, type Bounds } from '../systems/movimento'
-import {
-  construcaoMaisProxima,
-  podeConstruir,
-  updateConstrucoesNave,
-} from '../systems/construcoesNave'
+import { acaoDisponivel, nivelAtual, updateConstrucoesNave } from '../systems/construcoesNave'
 import { updatePanes, podeRepararCasco, repararCasco } from '../systems/casco'
 import { CONSTRUCOES } from '../content/construcoesNave'
 import { cloneForHud } from '../state/cloneForHud'
@@ -86,20 +82,20 @@ export default function NaveScene({ stateRef, onExplorarPlaneta }: Props) {
       MUNDO.y1 - MUNDO.y0,
     )
 
-    const alvo = construcaoMaisProxima(state)
+    const acao = acaoDisponivel(state)
 
     for (const def of CONSTRUCOES) {
-      const construido = Boolean(state.construcoes[def.id]?.construido)
+      const nivel = nivelAtual(state, def.id)
       const ex = def.posicao.x - camera.x
       const ey = def.posicao.y - camera.y
 
-      if (construido) {
+      if (nivel >= 1) {
         ctx.fillStyle = def.cor
         ctx.fillRect(ex - 28, ey - 28, 56, 56)
         ctx.fillStyle = '#e5e7eb'
         ctx.font = '12px sans-serif'
         ctx.textAlign = 'center'
-        ctx.fillText(def.nome, ex, ey + 44)
+        ctx.fillText(`${def.nome} Nv${nivel}`, ex, ey + 44)
       } else {
         ctx.strokeStyle = 'rgba(192,132,252,0.5)'
         ctx.setLineDash([4, 4])
@@ -109,12 +105,16 @@ export default function NaveScene({ stateRef, onExplorarPlaneta }: Props) {
         ctx.font = '11px sans-serif'
         ctx.textAlign = 'center'
         ctx.fillText(def.nome, ex, ey + 44)
+      }
 
-        if (alvo?.id === def.id && podeConstruir(state, def.custoConstruir)) {
-          ctx.fillStyle = '#f3f4f6'
-          ctx.font = 'bold 13px sans-serif'
-          ctx.fillText('[E] Construir', ex, ey - 40)
-        }
+      if (acao?.def.id === def.id) {
+        ctx.fillStyle = '#f3f4f6'
+        ctx.font = 'bold 13px sans-serif'
+        ctx.fillText(
+          acao.tipo === 'construir' ? '[E] Construir' : `[E] Upar p/ Nv${nivel + 1}`,
+          ex,
+          ey - 40,
+        )
       }
     }
 
