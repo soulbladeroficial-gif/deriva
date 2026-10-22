@@ -117,10 +117,14 @@ Equipamento do jogador, upa via Bancada de Upgrade. Todas têm **5 níveis** (s�
 
 ### Fauna por classe de planeta
 
-Das 15 classes, 8 têm fauna. Habitabilidade ruim → fauna mais forte (reforça o risco do ambiente); habitabilidade boa → fauna mais fraca ou majoritariamente passiva (compensa o ambiente amigável). Comportamento reflete o terreno: campo aberto = persegue, água/escuro = emboscada, território de recurso raro = territorial.
+Das 15 classes, 14 têm algum tipo de fauna — só Deserto de Gelo Seco não tem nenhuma. Dessas 14, 12 dão material ao abater (fauna passiva sempre dá; a agressiva geralmente também, exceto Glacial e Vulcânico/Tóxico, que são perigo puro sem loot). Habitabilidade ruim → fauna mais forte (reforça o risco do ambiente); habitabilidade boa → fauna mais fraca ou majoritariamente passiva (compensa o ambiente amigável). Comportamento reflete o terreno: campo aberto = persegue, água/escuro = emboscada, território de recurso raro = territorial.
 
 | Classe | Comportamento (agressiva) | Força | Design visual | Nota |
 |---|---|---|---|---|
+| Rochoso Árido | — | — | Pequenos répteis/insetos cor de terra, camuflados nas pedras | Só passiva, ocasional |
+| Montanhas Metálicas | — | — | Aves/cabras de montanha adaptadas à altitude, pelagem clara | Só passiva |
+| Glacial | Persegue | Alta | Predador branco de grande porte, adaptado ao gelo | Agressiva sem loot — perigo puro |
+| Vulcânico/Tóxico | Território/Persegue | Alta | Criatura de pele escamosa/resistente a calor, tons escuros | Agressiva sem loot — perigo puro |
 | Tundra Ventosa | Persegue | Média-alta | Pelagem grossa, corpo robusto e baixo (resiste ao vento) | — |
 | Savana Radioativa | Territorial/Persegue | Alta | Mutações visíveis: manchas luminescentes, deformidades leves | Guarda a área contaminada |
 | Floresta Bioluminescente | Emboscada | Média | Padrões bioluminescentes na pele, camuflagem na vegetação | Passiva não percebe até perto |
@@ -129,27 +133,29 @@ Das 15 classes, 8 têm fauna. Habitabilidade ruim → fauna mais forte (reforça
 | Arquipélago Tempestuoso | Persegue | Média | Plumagem adaptada a vento/água, cores vibrantes | Passiva são aves calmas |
 | Caverna Subterrânea | Territorial/Emboscada | Alta | Sem olhos (ou atrofiados), pele pálida/translúcida | Adaptado ao escuro total |
 | Recife Flutuante | Persegue | Média | Corpo leve/aerodinâmico, membranas pra planar, cores vivas | Passiva são voadores pacíficos |
+| Deserto de Cristal | — | — | Criatura pequena, corpo semi-translúcido (camuflagem com o cristal) | Só passiva, rara |
+| Ruínas Ancestrais | — | — | Pequenos animais que colonizaram as ruínas, pelagem acinzentada | Só passiva, rara |
 
 ### 15 classes de planeta
 
-Nota: em algumas classes a Fauna não entra na lista de "Extração presente" — é proposital, esse bicho é só perigo/ambientação, abater ele não dá material nenhum.
+Nota: fauna **passiva** sempre dá material ao ser abatida. Só fauna **agressiva** pode não entrar na lista de "Extração presente" — é proposital, nesses casos o bicho é perigo puro, sem recompensa (Glacial e Vulcânico/Tóxico).
 
 | # | Classe | Habitabilidade | Extração presente | Fauna |
 |---|---|---|---|---|
-| 1 | Rochoso Árido | Média | Rochas (abundante), Furos (ocasional), Anomalias (raro) | Passiva ocasional |
-| 2 | Montanhas Metálicas | Média | Rochas (muito abundante), Furos (raro), Anomalias (incomum) | Passiva |
+| 1 | Rochoso Árido | Média | Rochas (abundante), Furos (ocasional), Anomalias (raro), Fauna (rara) | Passiva ocasional |
+| 2 | Montanhas Metálicas | Média | Rochas (muito abundante), Furos (raro), Anomalias (incomum), Fauna (incomum) | Passiva |
 | 3 | Glacial | Baixa | Gelo/Fluidos (abundante), Rochas (comum), Anomalias (raro) | Agressiva |
 | 4 | Deserto de Gelo Seco | Péssima | Gelo/Fluidos (abundante), Rochas (raro), Anomalias (raro) | Sem fauna |
 | 5 | Tundra Ventosa | Média-baixa | Gelo/Fluidos (comum), Vegetação (incomum), Fauna | Agressiva |
 | 6 | Vulcânico/Tóxico | Péssima | Furos (abundante), Rochas densas (incomum), Anomalias (incomum) | Agressiva |
 | 7 | Savana Radioativa | Baixa | Rochas radioativas (incomum), Vegetação mutada (incomum), Fauna | Agressiva |
-| 8 | Deserto de Cristal | Média-baixa | Rochas cristalinas (raras), Anomalias (comum) | Sem fauna/passiva rara |
+| 8 | Deserto de Cristal | Média-baixa | Rochas cristalinas (raras), Anomalias (comum), Fauna (rara) | Sem fauna/passiva rara |
 | 9 | Floresta Bioluminescente | Alta | Vegetação (abundante), Fauna (abundante), Gelo/Fluidos (comum) | Mista |
 | 10 | Planície Fúngica | Alta | Vegetação (abundante), Fauna (comum), Furos (ocasional) | Passiva majoritária |
 | 11 | Oceânico/Pântano | Média | Gelo/Fluidos (abundante), Vegetação (comum), Fauna (comum) | Agressiva |
 | 12 | Arquipélago Tempestuoso | Média | Gelo/Fluidos (abundante), Furos (comum), Fauna | Mista |
 | 13 | Caverna Subterrânea | Baixa | Rochas (abundante), Anomalias (comum), Fauna | Agressiva |
-| 14 | Ruínas Ancestrais | Média | Anomalias (muito abundante), Rochas (comum), Vegetação (rara) | Passiva rara |
+| 14 | Ruínas Ancestrais | Média | Anomalias (muito abundante), Rochas (comum), Vegetação (rara), Fauna (rara) | Passiva rara |
 | 15 | Recife Flutuante | Alta | Vegetação (abundante), Fauna (abundante), Furos (raro) | Mista |
 
 ### Distribuição por classe de extração
@@ -159,8 +165,8 @@ Em quantas das 15 classes de planeta cada classe de extração aparece:
 | Classe de extração | Aparece em |
 |---|---|
 | Rochas | 9 |
+| Fauna | 12 |
 | Anomalias | 8 |
-| Fauna | 8 |
 | Vegetação | 7 |
 | Gelo/Fluidos | 6 |
 | Furos | 6 |
