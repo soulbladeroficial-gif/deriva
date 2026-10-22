@@ -100,8 +100,93 @@ Equipamento do jogador, upa via Bancada de Upgrade. Todas têm **5 níveis** (s�
 
 ## Planetas
 
-- Cada planeta nasce de uma **classe/bioma**, que define: habitabilidade, pool de recursos possíveis, e tipo de fauna (sem fauna / fauna passiva / fauna agressiva). Passiva não ataca (pode fugir ou não); agressiva ataca e reduz a Vida do jogador.
-- *Em aberto* — rascunho inicial de classes de planeta (não confirmado, só exemplo pra ilustrar a variedade pretendida): Rochoso Árido, Glacial, Vulcânico/Tóxico, Floresta Bioluminescente, Oceânico/Pântano, Deserto de Cristal.
+- Cada planeta nasce de uma **classe/bioma**, que define: habitabilidade, pool de recursos possíveis, tipo de fauna, estilo de geração de terreno e estruturas típicas.
+- Fauna: sem fauna / passiva (não ataca, pode fugir ou não) / agressiva (ataca, reduz a Vida do jogador).
+- Jogo é **2D com movimentação livre**. Terreno gerado em malha de blocos: **Obstáculo** (impede passagem — montanha, construção), **Chão** (livre acesso), **Nado** (água — rio, lago), **Abismo** (morte — queda, lava).
+- Cada planeta tem sua própria **seed**, gerando terreno único mesmo entre planetas da mesma classe. Cada classe tem textura/design próprios; a cor varia por instância pra reforçar a sensação de novidade a cada visita.
+
+### 15 classes de planeta
+
+| # | Classe | Habitabilidade | Extração presente | Fauna |
+|---|---|---|---|---|
+| 1 | Rochoso Árido | Média | Rochas (abundante), Furos (ocasional), Anomalias (raro) | Passiva ocasional |
+| 2 | Montanhas Metálicas | Média | Rochas (muito abundante), Furos (raro), Anomalias (incomum) | Passiva |
+| 3 | Glacial | Baixa | Gelo/Fluidos (abundante), Rochas (comum), Anomalias (raro) | Agressiva |
+| 4 | Deserto de Gelo Seco | Péssima | Gelo/Fluidos (abundante), Rochas (raro), Anomalias (raro) | Sem fauna |
+| 5 | Tundra Ventosa | Média-baixa | Gelo/Fluidos (comum), Vegetação (incomum), Fauna | Agressiva |
+| 6 | Vulcânico/Tóxico | Péssima | Furos (abundante), Rochas densas (incomum), Anomalias (incomum) | Agressiva |
+| 7 | Savana Radioativa | Baixa | Rochas radioativas (incomum), Vegetação mutada (incomum), Fauna | Agressiva |
+| 8 | Deserto de Cristal | Média-baixa | Rochas cristalinas (raras), Anomalias (comum) | Sem fauna/passiva rara |
+| 9 | Floresta Bioluminescente | Alta | Vegetação (abundante), Fauna (abundante), Gelo/Fluidos (comum) | Mista |
+| 10 | Planície Fúngica | Alta | Vegetação (abundante), Fauna (comum), Furos (ocasional) | Passiva majoritária |
+| 11 | Oceânico/Pântano | Média | Gelo/Fluidos (abundante), Vegetação (comum), Fauna (comum) | Agressiva |
+| 12 | Arquipélago Tempestuoso | Média | Gelo/Fluidos (abundante), Furos (comum), Fauna | Mista |
+| 13 | Caverna Subterrânea | Baixa | Rochas (abundante), Anomalias (comum), Fauna | Agressiva |
+| 14 | Ruínas Ancestrais | Média | Anomalias (muito abundante), Rochas (comum), Vegetação (rara) | Passiva rara |
+| 15 | Recife Flutuante | Alta | Vegetação (abundante), Fauna (abundante), Furos (raro) | Mista |
+
+### Distribuição por classe de extração
+
+Em quantas das 15 classes de planeta cada classe de extração aparece:
+
+| Classe de extração | Aparece em |
+|---|---|
+| Rochas | 9 |
+| Anomalias | 8 |
+| Fauna | 8 |
+| Vegetação | 7 |
+| Gelo/Fluidos | 6 |
+| Furos | 6 |
+
+### Padrão espacial por classe de extração (dentro de um planeta)
+
+| Classe de extração | Padrão espacial |
+|---|---|
+| Rochas | Em veios/clusters concentrados em formações específicas (paredes, afloramentos) |
+| Vegetação | Em manchas de densidade média, cobre regiões do mapa, não o mapa inteiro |
+| Fauna | Móvel, não é um nó fixo — aparece perto de área compatível (água/vegetação) |
+| Gelo/Fluidos | Concentrado em corpos (lagos, geleiras, rios) — precisa achar a fonte |
+| Furos | Pontos isolados espalhados pelo mapa, raramente agrupados |
+| Anomalias | Pontos fixos espalhados pelo planeta, nunca dois próximos — distância mínima obrigatória entre eles |
+
+### Estilo de geração e estruturas típicas
+
+| # | Classe | Obstáculo | Chão | Nado | Abismo | Estruturas típicas |
+|---|---|---|---|---|---|---|
+| 1 | Rochoso Árido | Médio | Alto | — | Raro | Cânions, arcos de pedra, crateras |
+| 2 | Montanhas Metálicas | Alto | Médio | — | Ocasional | Picos afiados, vetas expostas, desfiladeiros |
+| 3 | Glacial | Médio | Médio | Sim | Ocasional | Fiordes, cavernas de gelo, icebergs encalhados |
+| 4 | Deserto de Gelo Seco | Baixo | Muito alto | — | Raríssimo | Dunas de gelo seco, rachaduras longas |
+| 5 | Tundra Ventosa | Baixo | Alto | Ocasional | Raro | Afloramentos isolados, vales rasos |
+| 6 | Vulcânico/Tóxico | Alto | Baixo | — | Alto (lava) | Respiradouros ativos, lagos de lava, obsidiana |
+| 7 | Savana Radioativa | Médio | Alto | — | Raro | Rachaduras luminescentes, crateras antigas |
+| 8 | Deserto de Cristal | Médio | Médio | — | Raro | Dunas de cristal, campos de ressonância |
+| 9 | Floresta Bioluminescente | Alto | Médio | Sim | Raro | Clareiras luminosas, raízes gigantes |
+| 10 | Planície Fúngica | Médio | Alto | Ocasional | Raríssimo | Colônias de fungo gigante, nuvens de esporo |
+| 11 | Oceânico/Pântano | Baixo | Baixo | Muito alto | Raro | Manguezais, ilhotas alagadas |
+| 12 | Arquipélago Tempestuoso | Baixo | Médio | Muito alto | — | Ilhas dispersas, gêiseres marinhos |
+| 13 | Caverna Subterrânea | Alto | Médio | Ocasional | Alto | Salões de cristal, poços, lagos subterrâneos |
+| 14 | Ruínas Ancestrais | Médio-alto | Médio | Raro | Ocasional | Torres caídas, portais quebrados, câmaras seladas |
+| 15 | Recife Flutuante | Baixo | Médio | — | Muito alto | Ilhas flutuantes, abismos, pontes naturais |
+
+### Variedade dentro da mesma classe
+
+- **Paleta variável** — cor/clima leve sorteado por planeta, mesma classe nunca parece idêntica visualmente.
+- **Evento único por visita** — cada planeta sorteia 1-2 eventos que não fazem parte da classe (tempestade passageira, migração de fauna, anomalia temporária).
+- **Densidade variável** — dois planetas da mesma classe têm proporções diferentes das classes de extração presentes.
+- **Escala variável** — o mesmo bioma pode gerar compacto ou vasto, mudando quanto O2 é preciso pra explorar fundo.
+
+### Planetas Híbridos
+
+Classificação própria (não uma das 15), ~3-5% de chance em qualquer planeta gerado durante a viagem.
+
+- Sorteia **2 das 15 classes**, aleatoriamente, sem restrição de vizinhança.
+- Recursos: união das classes de extração dos 2 sorteados, cada uma com metade da densidade normal.
+- Fauna: a mais perigosa entre as duas.
+- Habitabilidade: a pior entre as duas.
+- Terreno: mistura dos dois perfis de blocos (Obstáculo/Chão/Nado/Abismo).
+- Estruturas típicas: pool combinado dos dois.
+- **Elemento surpresa**: o jogo só identifica o planeta como "Híbrido" — nem o Scanner de Longo Alcance revela quais 2 classes foram combinadas. Só se descobre pousando e explorando.
 
 ## Materiais
 
@@ -285,4 +370,4 @@ Cada categoria de construção tem sua própria "linha" de material incomum/raro
 
 ## Pendências
 
-- Classes de planeta/bioma (só rascunho inicial, não confirmado).
+(nenhuma no momento — todas as seções fechadas)
