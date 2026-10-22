@@ -7,6 +7,8 @@ export interface NaveState {
   energiaConsumida: number
   oxigenio: number
   oxigenioMax: number
+  casco: number
+  cascoMax: number
 }
 
 export interface JogadorState {
@@ -18,9 +20,11 @@ export interface JogadorState {
   oxigenioTrajeMax: number
 }
 
-export interface ConstrucoesState {
-  eletrolisador: { construido: boolean }
+export interface ConstrucaoState {
+  construido: boolean
 }
+
+export type ConstrucoesState = Record<string, ConstrucaoState>
 
 export interface PosicaoState {
   x: number

@@ -8,6 +8,8 @@ export function createInitialState(): GameState {
       energiaConsumida: 0,
       oxigenio: 800,
       oxigenioMax: 1000,
+      casco: 100,
+      cascoMax: 100,
     },
     jogador: {
       fome: 20,
@@ -22,10 +24,13 @@ export function createInitialState(): GameState {
       'Biomassa Comum': 10,
       'Ferro-Níquel': 10,
       'Cobre Nativo': 10,
+      'Basalto Denso': 10,
+      'Fibra Lenhosa': 10,
+      'Casca Fibrosa': 10,
+      'Gelo Comum': 10,
+      Peças: 5,
     },
-    construcoes: {
-      eletrolisador: { construido: false },
-    },
+    construcoes: {},
     posicao: { x: 400, y: 260 },
   }
 }

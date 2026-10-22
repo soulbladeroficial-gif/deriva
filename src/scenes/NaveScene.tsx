@@ -1,19 +1,18 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type MutableRefObject } from 'react'
+import { useCallback, useEffect, useRef, useState, type MutableRefObject } from 'react'
 import { useGameLoop } from '../engine/loop'
 import { createInputState, bindKeyboard } from '../engine/input'
 import { computeCamera } from '../engine/camera'
 import { drawGridFloor } from '../rendering/drawGridFloor'
 import { updateReatorPrincipal } from '../systems/reatorPrincipal'
-import { updateEletrolisador } from '../systems/eletrolisador'
 import { updateSobrevivencia } from '../systems/sobrevivencia'
 import { updateMovimento, type Bounds } from '../systems/movimento'
 import {
-  ELETROLISADOR_SLOT,
-  CUSTO_ELETROLISADOR,
-  pertoDoEletrolisador,
-  podeConstruirEletrolisador,
-  updateInteracao,
-} from '../systems/interacao'
+  construcaoMaisProxima,
+  podeConstruir,
+  updateConstrucoesNave,
+} from '../systems/construcoesNave'
+import { updatePanes, podeRepararCasco, repararCasco } from '../systems/casco'
+import { CONSTRUCOES } from '../content/construcoesNave'
 import { cloneForHud } from '../state/cloneForHud'
 import InventoryGrid from '../ui/InventoryGrid'
 import type { GameState } from '../engine/types'
@@ -30,7 +29,7 @@ const BOUNDS: Bounds = {
   x1: MUNDO.x1 - MARGEM_CASCO,
   y1: MUNDO.y1 - MARGEM_CASCO,
 }
-const SPAWN_NAVE = { x: 450, y: 275 }
+const SPAWN_NAVE = { x: 400, y: 275 }
 const TILE_SIZE = 32
 const PLAYER_RAIO = 12
 
@@ -59,10 +58,10 @@ export default function NaveScene({ stateRef, onExplorarPlaneta }: Props) {
     }
     state.nave.energiaConsumida = 0
     updateReatorPrincipal(state)
-    updateEletrolisador(state, dt)
     updateSobrevivencia(state, dt)
     updateMovimento(state, input, dt, BOUNDS)
-    updateInteracao(state, input)
+    updateConstrucoesNave(state, input, dt)
+    updatePanes(state, dt)
   }, [])
 
   const render = useCallback((state: GameState) => {
@@ -78,7 +77,6 @@ export default function NaveScene({ stateRef, onExplorarPlaneta }: Props) {
 
     drawGridFloor(ctx, camera, CANVAS_W, CANVAS_H, TILE_SIZE, 'rgba(255,255,255,0.04)')
 
-    // casco da nave (em coordenadas de mundo, convertido pra tela)
     ctx.strokeStyle = '#3a3f55'
     ctx.lineWidth = 2
     ctx.strokeRect(
@@ -88,35 +86,38 @@ export default function NaveScene({ stateRef, onExplorarPlaneta }: Props) {
       MUNDO.y1 - MUNDO.y0,
     )
 
-    // slot do eletrolisador
-    const construido = state.construcoes.eletrolisador.construido
-    const ex = ELETROLISADOR_SLOT.x - camera.x
-    const ey = ELETROLISADOR_SLOT.y - camera.y
-    if (construido) {
-      ctx.fillStyle = '#4fd1c5'
-      ctx.fillRect(ex - 28, ey - 28, 56, 56)
-      ctx.fillStyle = '#e5e7eb'
-      ctx.font = '12px sans-serif'
-      ctx.textAlign = 'center'
-      ctx.fillText('Eletrolisador', ex, ey + 44)
-    } else {
-      ctx.strokeStyle = 'rgba(192,132,252,0.5)'
-      ctx.setLineDash([4, 4])
-      ctx.strokeRect(ex - 28, ey - 28, 56, 56)
-      ctx.setLineDash([])
-      ctx.fillStyle = 'rgba(192,132,252,0.7)'
-      ctx.font = '11px sans-serif'
-      ctx.textAlign = 'center'
-      ctx.fillText('Construir Eletrolisador', ex, ey + 44)
+    const alvo = construcaoMaisProxima(state)
+
+    for (const def of CONSTRUCOES) {
+      const construido = Boolean(state.construcoes[def.id]?.construido)
+      const ex = def.posicao.x - camera.x
+      const ey = def.posicao.y - camera.y
+
+      if (construido) {
+        ctx.fillStyle = def.cor
+        ctx.fillRect(ex - 28, ey - 28, 56, 56)
+        ctx.fillStyle = '#e5e7eb'
+        ctx.font = '12px sans-serif'
+        ctx.textAlign = 'center'
+        ctx.fillText(def.nome, ex, ey + 44)
+      } else {
+        ctx.strokeStyle = 'rgba(192,132,252,0.5)'
+        ctx.setLineDash([4, 4])
+        ctx.strokeRect(ex - 28, ey - 28, 56, 56)
+        ctx.setLineDash([])
+        ctx.fillStyle = 'rgba(192,132,252,0.7)'
+        ctx.font = '11px sans-serif'
+        ctx.textAlign = 'center'
+        ctx.fillText(def.nome, ex, ey + 44)
+
+        if (alvo?.id === def.id && podeConstruir(state, def.custoConstruir)) {
+          ctx.fillStyle = '#f3f4f6'
+          ctx.font = 'bold 13px sans-serif'
+          ctx.fillText('[E] Construir', ex, ey - 40)
+        }
+      }
     }
 
-    if (!construido && pertoDoEletrolisador(state) && podeConstruirEletrolisador(state)) {
-      ctx.fillStyle = '#f3f4f6'
-      ctx.font = 'bold 13px sans-serif'
-      ctx.fillText('[E] Construir', ex, ey - 40)
-    }
-
-    // personagem — sempre centralizado na tela
     const px = CANVAS_W / 2
     const py = CANVAS_H / 2
     ctx.fillStyle = '#f3f4f6'
@@ -147,18 +148,23 @@ export default function NaveScene({ stateRef, onExplorarPlaneta }: Props) {
     return () => clearInterval(id)
   }, [stateRef])
 
-  const custoTexto = useMemo(
-    () => Object.entries(CUSTO_ELETROLISADOR).map(([item, qtd]) => `${qtd} ${item}`).join(' + '),
-    [],
-  )
+  function reparar() {
+    repararCasco(stateRef.current)
+    setHud(cloneForHud(stateRef.current))
+  }
 
   return (
     <div className="nave-scene">
       <h2>Nave</h2>
-      <p className="dica">WASD/setas pra andar · chegue perto de um slot e aperte E pra construir ({custoTexto})</p>
+      <p className="dica">WASD/setas pra andar · chegue perto de um slot tracejado e aperte E pra construir</p>
       <canvas ref={canvasRef} width={CANVAS_W} height={CANVAS_H} className="nave-canvas" />
 
       <div className="hud">
+        <div className="hud-bar">
+          <span>Casco</span>
+          <progress value={hud.nave.casco} max={hud.nave.cascoMax} />
+          <small>{hud.nave.casco.toFixed(0)} / {hud.nave.cascoMax}</small>
+        </div>
         <div className="hud-bar">
           <span>Energia</span>
           <progress value={hud.nave.energiaConsumida} max={Math.max(hud.nave.energiaGerada, 1)} />
@@ -186,6 +192,9 @@ export default function NaveScene({ stateRef, onExplorarPlaneta }: Props) {
       <div className="acoes">
         <button type="button" onClick={onExplorarPlaneta}>
           Explorar planeta próximo (Rochoso Árido)
+        </button>
+        <button type="button" onClick={reparar} disabled={!podeRepararCasco(hud)}>
+          Reparar Casco (2 Peças)
         </button>
       </div>
 
