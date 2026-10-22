@@ -27,7 +27,7 @@ Dois loops conectados:
 | Casco | Reparo é sempre uma ação manual do jogador, sempre possível se tiver peça. Pane só mata por negligência prolongada (avisa antes), não é súbita. |
 | Energia | Watts gerados vs. usados, instantâneo — não existe bateria/armazenamento de energia. |
 | Oxigênio da nave | Reserva enorme, quase nunca é um problema prático — é o orçamento de longo prazo da viagem toda. |
-| Fome / Sede (jogador) | Saciados consumindo itens de comida/água do inventário (não são medidores próprios, dependem de itens). |
+| Fome / Sede (jogador) | Sobem com o tempo; saciados consumindo itens de comida/água do inventário. |
 | Oxigênio do traje | Tanque pessoal do jogador — é o verdadeiro limite da exploração em planeta. Capacidade é um upgrade do Traje Espacial, não um item separado. |
 | Vida do jogador | Reduzida por ataque de fauna agressiva. Chega a 0 = morte (a causa "pelo planeta" já prevista). Recupera descansando (Dormitório) ou consumindo **Erva Medicinal** (item de cura — ver Materiais Orgânicos). |
 
@@ -112,6 +112,8 @@ Equipamento do jogador, upa via Bancada de Upgrade. Todas têm **5 níveis** (s�
 - Fauna: sem fauna / passiva (não ataca, pode fugir ou não) / agressiva (ataca, reduz a Vida do jogador).
 - **Fauna agressiva** segue um modelo base de 3 stats: **Vida** (quanto aguenta até morrer), **Dano** (quanto tira da Vida do jogador por ataque) e **Comportamento** (persegue ao avistar / emboscada quando o jogador se aproxima demais / territorial, só ataca se o jogador entrar numa área). Os números específicos de cada espécie ficam pra quando formos balancear o combate de verdade.
 - Assim como o planeta, a fauna tem **design visual e cor próprios por classe**, com a cor variando por instância (mesma lógica da seed dos planetas) pra nenhum encontro parecer repetido.
+- Jogo é **2D com movimentação livre**. Terreno gerado em malha de blocos: **Obstáculo** (impede passagem — montanha, construção), **Chão** (livre acesso), **Nado** (água — rio, lago), **Abismo** (morte — queda, lava).
+- Cada planeta tem sua própria **seed**, gerando terreno único mesmo entre planetas da mesma classe. Cada classe tem textura/design próprios; a cor varia por instância pra reforçar a sensação de novidade a cada visita.
 
 ### Fauna por classe de planeta
 
@@ -127,10 +129,10 @@ Das 15 classes, 8 têm fauna. Habitabilidade ruim → fauna mais forte (reforça
 | Arquipélago Tempestuoso | Persegue | Média | Plumagem adaptada a vento/água, cores vibrantes | Passiva são aves calmas |
 | Caverna Subterrânea | Territorial/Emboscada | Alta | Sem olhos (ou atrofiados), pele pálida/translúcida | Adaptado ao escuro total |
 | Recife Flutuante | Persegue | Média | Corpo leve/aerodinâmico, membranas pra planar, cores vivas | Passiva são voadores pacíficos |
-- Jogo é **2D com movimentação livre**. Terreno gerado em malha de blocos: **Obstáculo** (impede passagem — montanha, construção), **Chão** (livre acesso), **Nado** (água — rio, lago), **Abismo** (morte — queda, lava).
-- Cada planeta tem sua própria **seed**, gerando terreno único mesmo entre planetas da mesma classe. Cada classe tem textura/design próprios; a cor varia por instância pra reforçar a sensação de novidade a cada visita.
 
 ### 15 classes de planeta
+
+Nota: em algumas classes a Fauna não entra na lista de "Extração presente" — é proposital, esse bicho é só perigo/ambientação, abater ele não dá material nenhum.
 
 | # | Classe | Habitabilidade | Extração presente | Fauna |
 |---|---|---|---|---|
