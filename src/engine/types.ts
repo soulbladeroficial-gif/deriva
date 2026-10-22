@@ -14,6 +14,8 @@ export interface JogadorState {
   sede: number
   vida: number
   vidaMax: number
+  oxigenioTraje: number
+  oxigenioTrajeMax: number
 }
 
 export interface ConstrucoesState {

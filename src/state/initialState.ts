@@ -14,6 +14,8 @@ export function createInitialState(): GameState {
       sede: 20,
       vida: 100,
       vidaMax: 100,
+      oxigenioTraje: 100,
+      oxigenioTrajeMax: 100,
     },
     inventario: {
       'Água Pura': 10,

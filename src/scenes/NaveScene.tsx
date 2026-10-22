@@ -1,5 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { createInitialState } from '../state/initialState'
+import { useCallback, useEffect, useMemo, useRef, useState, type MutableRefObject } from 'react'
 import { useGameLoop } from '../engine/loop'
 import { createInputState, bindKeyboard } from '../engine/input'
 import { updateReatorPrincipal } from '../systems/reatorPrincipal'
@@ -8,13 +7,13 @@ import { updateSobrevivencia } from '../systems/sobrevivencia'
 import { updateMovimento, type Bounds } from '../systems/movimento'
 import {
   ELETROLISADOR_SLOT,
-  RAIO_INTERACAO,
   CUSTO_ELETROLISADOR,
   pertoDoEletrolisador,
   podeConstruirEletrolisador,
   updateInteracao,
 } from '../systems/interacao'
-import { ITEM_ACTIONS, usarItem } from '../content/itemActions'
+import { cloneForHud } from '../state/cloneForHud'
+import InventoryGrid from '../ui/InventoryGrid'
 import type { GameState } from '../engine/types'
 import type { InputState } from '../engine/input'
 import './NaveScene.css'
@@ -22,27 +21,24 @@ import './NaveScene.css'
 const CANVAS_W = 640
 const CANVAS_H = 360
 const BOUNDS: Bounds = { x0: 100, y0: 100, x1: CANVAS_W - 100, y1: CANVAS_H - 100 }
+const SPAWN_NAVE = { x: 400, y: 260 }
 const TILE_SIZE = 32
 const PLAYER_RAIO = 12
 
-function cloneForHud(state: GameState): GameState {
-  return {
-    ...state,
-    nave: { ...state.nave },
-    jogador: { ...state.jogador },
-    inventario: { ...state.inventario },
-    construcoes: { eletrolisador: { ...state.construcoes.eletrolisador } },
-    posicao: { ...state.posicao },
-  }
+interface Props {
+  stateRef: MutableRefObject<GameState>
+  onExplorarPlaneta: () => void
 }
 
-export default function NaveScene() {
-  const stateRef = useRef<GameState>(createInitialState())
+export default function NaveScene({ stateRef, onExplorarPlaneta }: Props) {
   const inputRef = useRef<InputState>(createInputState())
   const [hud, setHud] = useState(() => cloneForHud(stateRef.current))
-  const [itemSelecionado, setItemSelecionado] = useState<string | null>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const facingRef = useRef<{ dx: number; dy: number }>({ dx: 0, dy: 1 })
+
+  useEffect(() => {
+    stateRef.current.posicao = { ...SPAWN_NAVE }
+  }, [stateRef])
 
   const update = useCallback((state: GameState, dt: number) => {
     const input = inputRef.current
@@ -69,7 +65,6 @@ export default function NaveScene() {
     ctx.fillStyle = '#0b0d14'
     ctx.fillRect(0, 0, canvas.width, canvas.height)
 
-    // chão em grade
     ctx.strokeStyle = 'rgba(255,255,255,0.04)'
     ctx.lineWidth = 1
     for (let x = BOUNDS.x0 - TILE_SIZE; x <= BOUNDS.x1 + TILE_SIZE; x += TILE_SIZE) {
@@ -85,12 +80,10 @@ export default function NaveScene() {
       ctx.stroke()
     }
 
-    // casco da nave
     ctx.strokeStyle = '#3a3f55'
     ctx.lineWidth = 2
     ctx.strokeRect(70, 70, canvas.width - 140, canvas.height - 140)
 
-    // slot do eletrolisador
     const construido = state.construcoes.eletrolisador.construido
     const { x: ex, y: ey } = ELETROLISADOR_SLOT
     if (construido) {
@@ -111,14 +104,12 @@ export default function NaveScene() {
       ctx.fillText('Construir Eletrolisador', ex, ey + 44)
     }
 
-    // prompt de interação
     if (!construido && pertoDoEletrolisador(state) && podeConstruirEletrolisador(state)) {
       ctx.fillStyle = '#f3f4f6'
       ctx.font = 'bold 13px sans-serif'
       ctx.fillText('[E] Construir', ex, ey - 40)
     }
 
-    // personagem
     const { x: px, y: py } = state.posicao
     ctx.fillStyle = '#f3f4f6'
     ctx.beginPath()
@@ -146,13 +137,7 @@ export default function NaveScene() {
       setHud(cloneForHud(stateRef.current))
     }, 150)
     return () => clearInterval(id)
-  }, [])
-
-  function aplicarAcao(item: string, action: (typeof ITEM_ACTIONS)[string][number]) {
-    usarItem(stateRef.current, item, action)
-    setHud(cloneForHud(stateRef.current))
-    setItemSelecionado(null)
-  }
+  }, [stateRef])
 
   const custoTexto = useMemo(
     () => Object.entries(CUSTO_ELETROLISADOR).map(([item, qtd]) => `${qtd} ${item}`).join(' + '),
@@ -190,41 +175,17 @@ export default function NaveScene() {
         </div>
       </div>
 
-      <div className="inventario">
-        <h3>Inventário</h3>
-        <div className="inventario-grid">
-          {Object.entries(hud.inventario).map(([item, qtd]) => {
-            const acoes = ITEM_ACTIONS[item]
-            const aberto = itemSelecionado === item
-            return (
-              <div key={item} className="item-slot-wrap">
-                <button
-                  type="button"
-                  className={`item-slot${aberto ? ' aberto' : ''}`}
-                  onClick={() => setItemSelecionado(aberto ? null : item)}
-                >
-                  <span className="item-icon">{item.slice(0, 2).toUpperCase()}</span>
-                  <span className="item-nome">{item}</span>
-                  <span className="item-qtd">{qtd.toFixed(1)}</span>
-                </button>
-                {aberto && (
-                  <div className="item-acoes">
-                    {acoes && acoes.length > 0 ? (
-                      acoes.map((acao) => (
-                        <button key={acao.label} onClick={() => aplicarAcao(item, acao)}>
-                          {acao.label}
-                        </button>
-                      ))
-                    ) : (
-                      <span className="sem-acao">sem uso ainda</span>
-                    )}
-                  </div>
-                )}
-              </div>
-            )
-          })}
-        </div>
+      <div className="acoes">
+        <button type="button" onClick={onExplorarPlaneta}>
+          Explorar planeta próximo (Rochoso Árido)
+        </button>
       </div>
+
+      <InventoryGrid
+        inventario={hud.inventario}
+        stateRef={stateRef}
+        onChange={() => setHud(cloneForHud(stateRef.current))}
+      />
     </div>
   )
 }

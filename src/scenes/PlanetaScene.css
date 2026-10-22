@@ -1,0 +1,67 @@
+.planeta-scene {
+  min-height: 100svh;
+  padding: 24px;
+  color: #e5e7eb;
+  background: #1a1410;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.planeta-scene h2 {
+  margin: 0;
+}
+
+.planeta-canvas {
+  border: 1px solid #4a3a2a;
+  align-self: center;
+}
+
+.dica {
+  margin: 0;
+  font-size: 13px;
+  color: #b8a890;
+}
+
+.hud {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.hud-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 140px;
+}
+
+.hud-bar span {
+  font-size: 13px;
+  color: #b8a890;
+}
+
+.hud-bar progress {
+  width: 100%;
+}
+
+.acoes {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.acoes button {
+  font: inherit;
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 1px solid #4a3a2a;
+  background: transparent;
+  color: #e5e7eb;
+  cursor: pointer;
+}
+
+.acoes button:hover {
+  background: rgba(79, 209, 197, 0.15);
+  border-color: rgba(79, 209, 197, 0.5);
+}
