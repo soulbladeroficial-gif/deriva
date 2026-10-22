@@ -29,6 +29,7 @@ Dois loops conectados:
 | Oxigênio da nave | Reserva enorme, quase nunca é um problema prático — é o orçamento de longo prazo da viagem toda. |
 | Fome / Sede (jogador) | Saciados consumindo itens de comida/água do inventário (não são medidores próprios, dependem de itens). |
 | Oxigênio do traje | Tanque pessoal do jogador — é o verdadeiro limite da exploração em planeta. Capacidade é um upgrade do Traje Espacial, não um item separado. |
+| Vida do jogador | Reduzida por ataque de fauna agressiva. Chega a 0 = morte (a causa "pelo planeta" já prevista). Recupera descansando ou com item de cura. |
 
 ## Navegação
 
@@ -84,16 +85,22 @@ O jogador constrói do zero. A maioria tem **níveis de upgrade** (1, 2, 3), cad
 
 ## Ferramentas pessoais
 
-Equipamento do jogador, upa via Bancada de Upgrade.
+Equipamento do jogador, upa via Bancada de Upgrade. Todas têm **5 níveis** (são intrínsecas ao usuário, não construções da nave).
 
-- **Traje Espacial** — reduz consumo de O2 externo; a capacidade do tanque de O2 é um upgrade dele (não é item equipável separado).
-- **Ferramenta de Coleta** — extrai matéria-prima no planeta. Upgrade: velocidade de coleta vs. consumo de energia do traje.
+- **Traje Espacial** — reduz consumo de O2 externo; a capacidade do tanque de O2 é um upgrade dele (não é item equipável separado). Leva dano quando o jogador é atacado por fauna agressiva — isso piora o consumo de O2 até ser reparado (Oficina/Bancada).
+- **Ferramenta de Coleta** — extrai matéria-prima de Rochas, Vegetação e Gelo/Fluidos. **Não é necessária pra Fauna** — matar o animal já dá o material direto. Upgrade: velocidade de coleta vs. consumo de energia do traje.
 - **Scanner Pessoal** — diferente do Scanner de Longo Alcance (que é da nave); revela depósitos escondidos e perigos próximos dentro do planeta. Upgrade: raio de detecção.
-- **Arma Pessoal** — combate contra monstros "de luta". Usa a **mesma munição da Torreta** — gastar bala em monstro é bala a menos pra defesa de asteroide (trade-off real).
+- **Extrator de Gás** — ferramenta dedicada à classe Furos, pra coletar gás com segurança.
+- **Armas pessoais** (3 tipos, não precisam ser construídas no início — o jogador não começa com elas):
+  - **Faca** — corpo a corpo, não gasta munição, mas precisa chegar perto (mais risco de levar dano).
+  - **Arma de Choque** — não mata, só atordoa/afasta; boa contra fauna passiva ou pra evitar luta. Usa carga própria, não munição.
+  - **Rifle** — arma de verdade contra fauna agressiva; usa a **mesma munição da Torreta** — gastar bala em combate é bala a menos pra defesa de asteroide (trade-off real).
+
+**Gear inicial**: o jogador já começa com Traje Espacial, Ferramenta de Coleta, Scanner Pessoal e Extrator de Gás em nível 1. As 3 armas precisam ser construídas durante o jogo.
 
 ## Planetas
 
-- Cada planeta nasce de uma **classe/bioma**, que define: habitabilidade, pool de recursos possíveis, e tipo de perigo (sem monstro / monstro de fuga / monstro de combate).
+- Cada planeta nasce de uma **classe/bioma**, que define: habitabilidade, pool de recursos possíveis, e tipo de fauna (sem fauna / fauna passiva / fauna agressiva). Passiva não ataca (pode fugir ou não); agressiva ataca e reduz a Vida do jogador.
 - *Em aberto* — rascunho inicial de classes de planeta (não confirmado, só exemplo pra ilustrar a variedade pretendida): Rochoso Árido, Glacial, Vulcânico/Tóxico, Floresta Bioluminescente, Oceânico/Pântano, Deserto de Cristal.
 
 ## Materiais
@@ -118,6 +125,17 @@ Equipamento do jogador, upa via Bancada de Upgrade.
   - Energético → Rochas, Furos
   - Exótico → Anomalias (exclusivamente)
 - Regra geral: um item pode servir pra mais de uma coisa; uma construção pode pedir mais de um tipo de item ao mesmo tempo.
+
+**Coleta por classe**
+
+| Classe | Item usado pra coletar |
+|---|---|
+| Rochas | Ferramenta de Coleta |
+| Vegetação | Ferramenta de Coleta |
+| Fauna | Combate (Faca/Arma de Choque/Rifle) — não precisa de Ferramenta de Coleta |
+| Gelo/Fluidos | Ferramenta de Coleta |
+| Furos | Extrator de Gás |
+| Anomalias | Nenhum item necessário — só precisa encontrar (Scanner Pessoal ajuda a localizar) |
 
 ### Itens definidos até agora
 
@@ -251,8 +269,21 @@ Cada categoria de construção tem sua própria "linha" de material incomum/raro
 | Geladeira | Ferro-Níquel + Cobre Nativo | Alumínio Purificado | Liga Anticorrosiva |
 | Fornalha | Ferro-Níquel + Basalto Denso | Alumínio Purificado | Liga Anticorrosiva |
 
+## Receitas de ferramentas pessoais (Estrutural)
+
+5 níveis (Construir + N2 a N5), sem item novo — N2/N3 usam 1x/2x do incomum da linha, N4/N5 usam 1x/2x do raro.
+
+| Ferramenta | Construir | N2 | N3 | N4 | N5 |
+|---|---|---|---|---|---|
+| Traje Espacial | 3 Couro Reforçado + 2 Osso Denso | 1 Carapaça Quitinosa | 2 Carapaça Quitinosa | 1 Escama Blindada | 2 Escama Blindada |
+| Ferramenta de Coleta | 3 Ferro-Níquel + 2 Basalto Denso | 1 Aço Temperado | 2 Aço Temperado | 1 Tungstênio | 2 Tungstênio |
+| Scanner Pessoal | 2 Cobre Nativo + 2 Ferro-Níquel | 1 Liga de Impulso | 2 Liga de Impulso | 1 Núcleo de Impulso Avançado | 2 Núcleo de Impulso Avançado |
+| Extrator de Gás | 3 Ferro-Níquel + 2 Cobre Nativo | 1 Alumínio Purificado | 2 Alumínio Purificado | 1 Liga Anticorrosiva | 2 Liga Anticorrosiva |
+| Faca | 2 Ferro-Níquel + 1 Osso Denso | 1 Titânio Bruto | 2 Titânio Bruto | 1 Liga Blindada | 2 Liga Blindada |
+| Arma de Choque | 2 Cobre Nativo + 2 Ferro-Níquel | 1 Prata Condutora | 2 Prata Condutora | 1 Liga Supercondutora | 2 Liga Supercondutora |
+| Rifle | 3 Ferro-Níquel + 2 Titânio Bruto | 1 Titânio Bruto | 2 Titânio Bruto | 1 Liga Blindada | 2 Liga Blindada |
+
 ## Pendências
 
 - Mecânica de automação entre bancadas (ideia inicial rejeitada, revisar).
 - Classes de planeta/bioma (só rascunho inicial, não confirmado).
-- Receitas de upgrade das Ferramentas pessoais (Traje, Ferramenta de Coleta, Scanner Pessoal, Arma Pessoal) — ainda só descritas conceitualmente, sem materiais específicos por nível.
