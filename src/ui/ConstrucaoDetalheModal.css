@@ -125,10 +125,18 @@
 
 .detalhe-remover {
   background: rgba(248, 113, 113, 0.15);
-  align-self: stretch;
   text-align: center;
 }
 
 .detalhe-remover:hover {
   background: rgba(248, 113, 113, 0.3);
+}
+
+.detalhe-rodape {
+  display: flex;
+  gap: 8px;
+}
+
+.detalhe-rodape button {
+  flex: 1;
 }

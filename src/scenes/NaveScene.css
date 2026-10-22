@@ -12,6 +12,10 @@
   display: block;
 }
 
+.nave-canvas-full.posicionando {
+  cursor: crosshair;
+}
+
 .hud-nave,
 .hud-jogador {
   position: absolute;

@@ -11,15 +11,15 @@ import {
   construcaoColocadaProxima,
   construcaoPorId,
   descricaoBufferDef,
-  pendentes,
   pertoDe,
   podeColocarEm,
+  colocarPendente,
   updateConstrucoesNave,
 } from '../systems/construcoesNave'
 import { descricaoConversor } from '../systems/conversor'
 import { updatePanes, podeRepararCasco, repararCasco } from '../systems/casco'
 import { dormir } from '../systems/dormitorio'
-import { SALAS, CAMA } from '../content/salasNave'
+import { PAREDES, CAMA, BANCADA_FABRICACAO } from '../content/salasNave'
 import { cloneForHud } from '../state/cloneForHud'
 import InventarioModal from '../ui/InventarioModal'
 import ConstrucaoDetalheModal from '../ui/ConstrucaoDetalheModal'
@@ -50,8 +50,15 @@ export default function NaveScene({ stateRef, onExplorarPlaneta }: Props) {
   const [avisoSono, setAvisoSono] = useState<string | null>(null)
   const [inventarioAberto, setInventarioAberto] = useState(false)
   const [detalheId, setDetalheId] = useState<string | null>(null)
+  const [posicionando, setPosicionando] = useState<string | null>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const facingRef = useRef<{ dx: number; dy: number }>({ dx: 0, dy: 1 })
+  const mouseRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 })
+  const posicionandoRef = useRef<string | null>(null)
+
+  useEffect(() => {
+    posicionandoRef.current = posicionando
+  }, [posicionando])
 
   useEffect(() => {
     stateRef.current.posicao = { ...SPAWN_NAVE }
@@ -80,10 +87,19 @@ export default function NaveScene({ stateRef, onExplorarPlaneta }: Props) {
     state.nave.energiaConsumida = 0
     updateReatorPrincipal(state)
     updateSobrevivencia(state, dt)
-    updateMovimento(state, input, dt, BOUNDS)
-    updateConstrucoesNave(state, input, dt)
+    updateMovimento(state, input, dt, BOUNDS, PAREDES, PLAYER_RAIO)
+    updateConstrucoesNave(state, dt)
     updatePanes(state, dt)
   }, [])
+
+  function posicaoDoMouseNoMundo(camera: { x: number; y: number }) {
+    const worldX = mouseRef.current.x + camera.x
+    const worldY = mouseRef.current.y + camera.y
+    return {
+      x: Math.round(worldX / TILE_SIZE) * TILE_SIZE,
+      y: Math.round(worldY / TILE_SIZE) * TILE_SIZE,
+    }
+  }
 
   const render = useCallback((state: GameState) => {
     const canvas = canvasRef.current
@@ -97,14 +113,15 @@ export default function NaveScene({ stateRef, onExplorarPlaneta }: Props) {
 
     drawEspacoExterior(ctx, camera, viewW, viewH)
     drawCascoNave(ctx, camera, MUNDO)
-    drawGridFloor(ctx, camera, viewW, viewH, TILE_SIZE, 'rgba(255,255,255,0.04)')
 
-    for (const sala of SALAS) {
-      const sx0 = sala.area.x0 - camera.x
-      const sy0 = sala.area.y0 - camera.y
-      ctx.strokeStyle = '#3a3f55'
-      ctx.lineWidth = 2
-      ctx.strokeRect(sx0, sy0, sala.area.x1 - sala.area.x0, sala.area.y1 - sala.area.y0)
+    const emEdicao = Boolean(posicionandoRef.current)
+    if (emEdicao) {
+      drawGridFloor(ctx, camera, viewW, viewH, TILE_SIZE, 'rgba(255,255,255,0.12)')
+    }
+
+    ctx.fillStyle = '#4b5168'
+    for (const p of PAREDES) {
+      ctx.fillRect(p.x0 - camera.x, p.y0 - camera.y, p.x1 - p.x0, p.y1 - p.y0)
     }
 
     for (const defId of Object.keys(state.construcoes)) {
@@ -146,17 +163,39 @@ export default function NaveScene({ stateRef, onExplorarPlaneta }: Props) {
     ctx.textAlign = 'center'
     ctx.fillText('Cama', bx, by + 34)
 
-    // prompt de instalação livre — jogador segurando uma construção pendente
-    const pend = pendentes(state)[0]
-    if (pend) {
-      const valido = podeColocarEm(state, state.posicao)
-      ctx.fillStyle = valido ? '#f3f4f6' : '#f87171'
-      ctx.font = 'bold 13px sans-serif'
-      ctx.fillText(
-        valido ? `[E] Instalar ${pend.nome} aqui` : `${pend.nome} pronta — ache um espaço livre numa sala`,
-        viewW / 2,
-        viewH / 2 - 40,
-      )
+    // bancada de fabricação
+    const kx = BANCADA_FABRICACAO.x - camera.x
+    const ky = BANCADA_FABRICACAO.y - camera.y
+    ctx.fillStyle = '#92400e'
+    ctx.fillRect(kx - 34, ky - 22, 68, 44)
+    ctx.fillStyle = '#e5e7eb'
+    ctx.font = '12px sans-serif'
+    ctx.textAlign = 'center'
+    ctx.fillText('Bancada', kx, ky + 38)
+
+    // ghost de posicionamento — segue o mouse, ajustado na malha
+    if (posicionandoRef.current) {
+      const def = construcaoPorId(posicionandoRef.current)
+      if (def) {
+        const alvo = posicaoDoMouseNoMundo(camera)
+        const valido = podeColocarEm(state, alvo)
+        const sx = alvo.x - camera.x
+        const sy = alvo.y - camera.y
+        ctx.globalAlpha = 0.55
+        ctx.fillStyle = valido ? def.cor : '#f87171'
+        ctx.fillRect(sx - 28, sy - 28, 56, 56)
+        ctx.globalAlpha = 1
+        ctx.strokeStyle = valido ? '#4ade80' : '#f87171'
+        ctx.lineWidth = 2
+        ctx.strokeRect(sx - 28, sy - 28, 56, 56)
+        ctx.fillStyle = '#f3f4f6'
+        ctx.font = 'bold 13px sans-serif'
+        ctx.fillText(
+          valido ? `Clique pra posicionar ${def.nome}` : 'Posição inválida',
+          viewW / 2,
+          40,
+        )
+      }
     }
 
     // personagem — sempre centralizado na tela
@@ -190,6 +229,31 @@ export default function NaveScene({ stateRef, onExplorarPlaneta }: Props) {
     return () => clearInterval(id)
   }, [stateRef])
 
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') setPosicionando(null)
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [])
+
+  function onMouseMoveCanvas(e: React.MouseEvent<HTMLCanvasElement>) {
+    const rect = e.currentTarget.getBoundingClientRect()
+    mouseRef.current = { x: e.clientX - rect.left, y: e.clientY - rect.top }
+  }
+
+  function onClickCanvas() {
+    if (!posicionandoRef.current) return
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const camera = computeCamera(stateRef.current.posicao.x, stateRef.current.posicao.y, canvas.width, canvas.height)
+    const alvo = posicaoDoMouseNoMundo(camera)
+    if (!podeColocarEm(stateRef.current, alvo)) return
+    colocarPendente(stateRef.current, posicionandoRef.current, alvo)
+    setPosicionando(null)
+    setHud(cloneForHud(stateRef.current))
+  }
+
   function reparar() {
     repararCasco(stateRef.current)
     setHud(cloneForHud(stateRef.current))
@@ -210,10 +274,17 @@ export default function NaveScene({ stateRef, onExplorarPlaneta }: Props) {
   const construcaoProxima = construcaoColocadaProxima(hud)
   const pertoDaCama = pertoDe(hud, CAMA)
   const detalheDef = detalheId ? construcaoPorId(detalheId) : null
+  const capacidadeEnergia = Math.max(hud.nave.energiaGerada, 1)
+  const energiaDisponivel = Math.max(0, hud.nave.energiaGerada - hud.nave.energiaConsumida)
 
   return (
     <div className="nave-scene">
-      <canvas ref={canvasRef} className="nave-canvas-full" />
+      <canvas
+        ref={canvasRef}
+        className={`nave-canvas-full${posicionando ? ' posicionando' : ''}`}
+        onMouseMove={onMouseMoveCanvas}
+        onClick={onClickCanvas}
+      />
 
       <div className="hud-nave">
         <span className="hud-titulo">NAVE</span>
@@ -223,7 +294,7 @@ export default function NaveScene({ stateRef, onExplorarPlaneta }: Props) {
         </div>
         <div className="hud-linha">
           <span>Energia</span>
-          <progress value={hud.nave.energiaConsumida} max={Math.max(hud.nave.energiaGerada, 1)} />
+          <progress value={energiaDisponivel} max={capacidadeEnergia} />
         </div>
         <div className="hud-linha">
           <span>O2</span>
@@ -250,24 +321,32 @@ export default function NaveScene({ stateRef, onExplorarPlaneta }: Props) {
       {avisoSono && <p className="aviso-sono">{avisoSono}</p>}
 
       <div className="acoes">
-        <button type="button" onClick={() => setInventarioAberto(true)}>
-          Inventário
-        </button>
-        <button type="button" onClick={onExplorarPlaneta}>
-          Explorar planeta próximo (Rochoso Árido)
-        </button>
-        <button type="button" onClick={reparar} disabled={!podeRepararCasco(hud)}>
-          Reparar Casco (2 Peças)
-        </button>
-        {construcaoProxima && (
-          <button type="button" onClick={() => setDetalheId(construcaoProxima.id)}>
-            Abrir {construcaoProxima.nome}
+        {posicionando ? (
+          <button type="button" onClick={() => setPosicionando(null)}>
+            Cancelar posicionamento (Esc)
           </button>
-        )}
-        {pertoDaCama && (
-          <button type="button" onClick={dormirAgora}>
-            Dormir
-          </button>
+        ) : (
+          <>
+            <button type="button" onClick={() => setInventarioAberto(true)}>
+              Inventário
+            </button>
+            <button type="button" onClick={onExplorarPlaneta}>
+              Explorar planeta próximo (Rochoso Árido)
+            </button>
+            <button type="button" onClick={reparar} disabled={!podeRepararCasco(hud)}>
+              Reparar Casco (2 Peças)
+            </button>
+            {construcaoProxima && (
+              <button type="button" onClick={() => setDetalheId(construcaoProxima.id)}>
+                Abrir {construcaoProxima.nome}
+              </button>
+            )}
+            {pertoDaCama && (
+              <button type="button" onClick={dormirAgora}>
+                Dormir
+              </button>
+            )}
+          </>
         )}
       </div>
 
@@ -277,6 +356,10 @@ export default function NaveScene({ stateRef, onExplorarPlaneta }: Props) {
           stateRef={stateRef}
           onChange={() => setHud(cloneForHud(stateRef.current))}
           onClose={() => setInventarioAberto(false)}
+          onPosicionar={(defId) => {
+            setInventarioAberto(false)
+            setPosicionando(defId)
+          }}
         />
       )}
 
@@ -287,6 +370,7 @@ export default function NaveScene({ stateRef, onExplorarPlaneta }: Props) {
           stateRef={stateRef}
           onChange={() => setHud(cloneForHud(stateRef.current))}
           onClose={() => setDetalheId(null)}
+          onMover={(defId) => setPosicionando(defId)}
         />
       )}
     </div>

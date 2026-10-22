@@ -157,6 +157,23 @@
   padding: 4px 8px;
 }
 
+.item-slot-construcao .item-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+}
+
+.item-acoes-fixa {
+  position: static;
+  margin-top: 6px;
+}
+
+.construcoes-aviso {
+  margin: 0 0 4px;
+  font-size: 12px;
+  color: #facc15;
+}
+
 .construcoes-lista {
   display: flex;
   flex-direction: column;

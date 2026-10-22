@@ -10,7 +10,7 @@ export const ITEM_ACTIONS: Record<string, ItemAction[]> = {
     {
       label: 'Beber',
       apply: (state) => {
-        state.jogador.sede = Math.max(0, state.jogador.sede - 20)
+        state.jogador.sede = Math.min(100, state.jogador.sede + 20)
       },
     },
   ],
@@ -18,7 +18,7 @@ export const ITEM_ACTIONS: Record<string, ItemAction[]> = {
     {
       label: 'Comer',
       apply: (state) => {
-        state.jogador.fome = Math.max(0, state.jogador.fome - 20)
+        state.jogador.fome = Math.min(100, state.jogador.fome + 20)
       },
     },
   ],

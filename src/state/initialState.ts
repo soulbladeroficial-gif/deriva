@@ -12,8 +12,8 @@ export function createInitialState(): GameState {
       cascoMax: 100,
     },
     jogador: {
-      fome: 20,
-      sede: 20,
+      fome: 80,
+      sede: 80,
       vida: 100,
       vidaMax: 100,
       oxigenioTraje: 100,

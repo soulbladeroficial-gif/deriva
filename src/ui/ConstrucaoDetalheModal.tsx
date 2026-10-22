@@ -21,9 +21,10 @@ interface Props {
   stateRef: MutableRefObject<GameState>
   onChange: () => void
   onClose: () => void
+  onMover: (defId: string) => void
 }
 
-export default function ConstrucaoDetalheModal({ def, hud, stateRef, onChange, onClose }: Props) {
+export default function ConstrucaoDetalheModal({ def, hud, stateRef, onChange, onClose, onMover }: Props) {
   const inst = hud.construcoes[def.id]
   if (!inst) return null
 
@@ -40,6 +41,13 @@ export default function ConstrucaoDetalheModal({ def, hud, stateRef, onChange, o
   function fazerUpgrade() {
     uparConstrucao(stateRef.current, def.id)
     onChange()
+  }
+
+  function fazerMover() {
+    removerColocada(stateRef.current, def.id)
+    onClose()
+    onChange()
+    onMover(def.id)
   }
 
   function fazerRemover() {
@@ -118,9 +126,14 @@ export default function ConstrucaoDetalheModal({ def, hud, stateRef, onChange, o
           )}
         </div>
 
-        <button type="button" className="detalhe-remover" onClick={fazerRemover}>
-          Remover da nave
-        </button>
+        <div className="detalhe-rodape">
+          <button type="button" onClick={fazerMover}>
+            Mover
+          </button>
+          <button type="button" className="detalhe-remover" onClick={fazerRemover}>
+            Remover da nave
+          </button>
+        </div>
       </div>
     </div>
   )

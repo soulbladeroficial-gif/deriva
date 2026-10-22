@@ -1,12 +1,11 @@
 import type { GameState } from '../engine/types'
-import type { InputState } from '../engine/input'
 import {
   CONSTRUCOES,
   CAPACIDADE_BUFFER_PADRAO,
   type ConstrucaoDef,
   type NivelCusto,
 } from '../content/construcoesNave'
-import { salaEm } from '../content/salasNave'
+import { salaEm, BANCADA_FABRICACAO } from '../content/salasNave'
 import { updateConversor } from './conversor'
 
 export const RAIO_INTERACAO = 55
@@ -48,13 +47,22 @@ export function pendentes(state: GameState): ConstrucaoDef[] {
   })
 }
 
-/** cria uma construção nova (nível 1), gasta o material na hora — fica pendente de posicionar */
+/** só dá pra criar construções perto da bancada de fabricação da nave */
+export function pertoDaBancada(state: GameState) {
+  return pertoDe(state, BANCADA_FABRICACAO)
+}
+
+export function podeCriar(state: GameState, def: ConstrucaoDef) {
+  const atual = state.construcoes[def.id]
+  if (atual && atual.nivel >= 1) return false
+  if (!pertoDaBancada(state)) return false
+  return temRecursos(state, def.niveis[0])
+}
+
+/** cria uma construção nova (nível 1) na bancada, gasta o material na hora — fica pendente de posicionar */
 export function criarConstrucao(state: GameState, id: string) {
   const def = construcaoPorId(id)
-  if (!def) return
-  const atual = state.construcoes[id]
-  if (atual && atual.nivel >= 1) return
-  if (!temRecursos(state, def.niveis[0])) return
+  if (!def || !podeCriar(state, def)) return
   for (const [item, qtd] of Object.entries(def.niveis[0])) {
     state.inventario[item] -= qtd
   }
@@ -187,7 +195,7 @@ export function uparConstrucao(state: GameState, defId: string) {
   inst.nivel += 1
 }
 
-export function updateConstrucoesNave(state: GameState, input: InputState, dt: number) {
+export function updateConstrucoesNave(state: GameState, dt: number) {
   for (const def of CONSTRUCOES) {
     const inst = state.construcoes[def.id]
     if (inst?.colocada && inst.nivel >= 1 && def.conversor) {
@@ -202,14 +210,5 @@ export function updateConstrucoesNave(state: GameState, input: InputState, dt: n
       const reducao = (otimizador.conversor?.reduzConsumoPercent ?? 0) * inst.nivel
       state.nave.energiaConsumida *= Math.max(0, 1 - reducao)
     }
-  }
-
-  if (!input.interactRequested) return
-  input.interactRequested = false
-
-  // construção livre: se o jogador tem algo pendente e está num ponto válido, instala aqui
-  const pend = pendentes(state)[0]
-  if (pend && podeColocarEm(state, state.posicao)) {
-    colocarPendente(state, pend.id, { x: state.posicao.x, y: state.posicao.y })
   }
 }

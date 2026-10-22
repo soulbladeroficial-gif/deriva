@@ -2,7 +2,7 @@ import { useState, type MutableRefObject } from 'react'
 import type { GameState } from '../engine/types'
 import { ITEM_ACTIONS, usarItem, type ItemAction } from '../content/itemActions'
 import { CONSTRUCOES } from '../content/construcoesNave'
-import { criarConstrucao, temRecursos } from '../systems/construcoesNave'
+import { criarConstrucao, pendentes, pertoDaBancada, podeCriar } from '../systems/construcoesNave'
 import './InventarioModal.css'
 
 interface Props {
@@ -10,11 +10,12 @@ interface Props {
   stateRef: MutableRefObject<GameState>
   onChange: () => void
   onClose: () => void
+  onPosicionar?: (defId: string) => void
 }
 
 type Aba = 'itens' | 'construcoes'
 
-export default function InventarioModal({ hud, stateRef, onChange, onClose }: Props) {
+export default function InventarioModal({ hud, stateRef, onChange, onClose, onPosicionar }: Props) {
   const [aba, setAba] = useState<Aba>('itens')
   const [itemSelecionado, setItemSelecionado] = useState<string | null>(null)
 
@@ -28,6 +29,9 @@ export default function InventarioModal({ hud, stateRef, onChange, onClose }: Pr
     criarConstrucao(stateRef.current, id)
     onChange()
   }
+
+  const itensPendentes = pendentes(hud)
+  const naBancada = pertoDaBancada(hud)
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -56,6 +60,22 @@ export default function InventarioModal({ hud, stateRef, onChange, onClose }: Pr
 
         {aba === 'itens' && (
           <div className="inventario-grid">
+            {itensPendentes.map((def) => (
+              <div key={def.id} className="item-slot-wrap">
+                <button type="button" className="item-slot item-slot-construcao">
+                  <span className="item-icon" style={{ background: def.cor }} />
+                  <span className="item-nome">{def.nome}</span>
+                  <span className="item-qtd">1</span>
+                </button>
+                <div className="item-acoes item-acoes-fixa">
+                  {onPosicionar ? (
+                    <button onClick={() => onPosicionar(def.id)}>Posicionar</button>
+                  ) : (
+                    <span className="sem-acao">volte pra nave pra posicionar</span>
+                  )}
+                </div>
+              </div>
+            ))}
             {Object.entries(hud.inventario).map(([item, qtd]) => {
               const acoes = ITEM_ACTIONS[item]
               const aberto = itemSelecionado === item
@@ -91,6 +111,11 @@ export default function InventarioModal({ hud, stateRef, onChange, onClose }: Pr
 
         {aba === 'construcoes' && (
           <div className="construcoes-lista">
+            {!naBancada && (
+              <p className="construcoes-aviso">
+                Precisa estar perto da Bancada de Fabricação pra criar construções novas.
+              </p>
+            )}
             {CONSTRUCOES.map((def) => {
               const inst = hud.construcoes[def.id]
               const nivel = inst?.nivel ?? 0
@@ -100,7 +125,7 @@ export default function InventarioModal({ hud, stateRef, onChange, onClose }: Pr
 
               let status: string
               if (nivel === 0) status = `Custa: ${custoTexto}`
-              else if (!inst.colocada) status = 'Pronta — leve até um espaço livre e aperte E'
+              else if (!inst.colocada) status = 'Criada — posicione pela aba Itens'
               else status = `Instalada, nível ${inst.nivel}`
 
               return (
@@ -111,11 +136,7 @@ export default function InventarioModal({ hud, stateRef, onChange, onClose }: Pr
                     <span className="construcao-status">{status}</span>
                   </div>
                   {nivel === 0 && (
-                    <button
-                      type="button"
-                      disabled={!temRecursos(hud, def.niveis[0])}
-                      onClick={() => criar(def.id)}
-                    >
+                    <button type="button" disabled={!podeCriar(hud, def)} onClick={() => criar(def.id)}>
                       Criar
                     </button>
                   )}
