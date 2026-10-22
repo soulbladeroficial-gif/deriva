@@ -23,6 +23,12 @@
   color: #9ca3af;
 }
 
+.aviso-sono {
+  margin: 0;
+  font-size: 13px;
+  color: #c084fc;
+}
+
 .hud {
   display: flex;
   flex-wrap: wrap;

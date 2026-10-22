@@ -49,3 +49,18 @@ export function updateConversor(state: GameState, dt: number, spec: ConversorSpe
     state.nave.energiaGerada += spec.produzEnergia * nivel
   }
 }
+
+/** texto curto tipo "-0.05 Água Pura/s  -3W  +2 O2/s" pra mostrar o que a construção faz de verdade */
+export function descricaoConversor(spec: ConversorSpec, nivel: number): string {
+  const partes: string[] = []
+  if (spec.consomeItem) partes.push(`-${(spec.consomeItem.taxa * nivel).toFixed(2)} ${spec.consomeItem.item}/s`)
+  if (spec.produzItem) partes.push(`+${(spec.produzItem.taxa * nivel).toFixed(2)} ${spec.produzItem.item}/s`)
+  if (spec.produzItens) {
+    for (const s of spec.produzItens) partes.push(`+${(s.taxa * nivel).toFixed(2)} ${s.item}/s`)
+  }
+  if (spec.consomeEnergia) partes.push(`-${(spec.consomeEnergia * nivel).toFixed(1)}W`)
+  if (spec.produzEnergia) partes.push(`+${(spec.produzEnergia * nivel).toFixed(1)}W`)
+  if (spec.produzO2Nave) partes.push(`+${(spec.produzO2Nave * nivel).toFixed(1)} O2/s`)
+  if (spec.reduzConsumoPercent) partes.push(`-${(spec.reduzConsumoPercent * nivel * 100).toFixed(0)}% consumo`)
+  return partes.join('  ')
+}

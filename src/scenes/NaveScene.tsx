@@ -6,11 +6,23 @@ import { drawGridFloor } from '../rendering/drawGridFloor'
 import { updateReatorPrincipal } from '../systems/reatorPrincipal'
 import { updateSobrevivencia } from '../systems/sobrevivencia'
 import { updateMovimento, type Bounds } from '../systems/movimento'
-import { acaoDisponivel, nivelAtual, updateConstrucoesNave } from '../systems/construcoesNave'
+import {
+  acaoUparDisponivel,
+  construcaoColocadaProxima,
+  construcaoNoSlot,
+  pendentes,
+  pertoDe,
+  removerColocada,
+  slotVazioProximo,
+  updateConstrucoesNave,
+} from '../systems/construcoesNave'
+import { descricaoConversor } from '../systems/conversor'
 import { updatePanes, podeRepararCasco, repararCasco } from '../systems/casco'
-import { CONSTRUCOES } from '../content/construcoesNave'
+import { dormir } from '../systems/dormitorio'
+import { SALAS, CAMA } from '../content/salasNave'
 import { cloneForHud } from '../state/cloneForHud'
 import InventoryGrid from '../ui/InventoryGrid'
+import ConstrucoesMenu from '../ui/ConstrucoesMenu'
 import type { GameState } from '../engine/types'
 import type { InputState } from '../engine/input'
 import './NaveScene.css'
@@ -18,14 +30,14 @@ import './NaveScene.css'
 const CANVAS_W = 640
 const CANVAS_H = 360
 const MARGEM_CASCO = 40
-const MUNDO = { x0: 0, y0: 0, x1: 1100, y1: 650 }
+const MUNDO = { x0: 0, y0: 0, x1: 1400, y1: 820 }
 const BOUNDS: Bounds = {
   x0: MUNDO.x0 + MARGEM_CASCO,
   y0: MUNDO.y0 + MARGEM_CASCO,
   x1: MUNDO.x1 - MARGEM_CASCO,
   y1: MUNDO.y1 - MARGEM_CASCO,
 }
-const SPAWN_NAVE = { x: 550, y: 325 }
+const SPAWN_NAVE = { x: 700, y: 400 }
 const TILE_SIZE = 32
 const PLAYER_RAIO = 12
 
@@ -37,6 +49,7 @@ interface Props {
 export default function NaveScene({ stateRef, onExplorarPlaneta }: Props) {
   const inputRef = useRef<InputState>(createInputState())
   const [hud, setHud] = useState(() => cloneForHud(stateRef.current))
+  const [avisoSono, setAvisoSono] = useState<string | null>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const facingRef = useRef<{ dx: number; dy: number }>({ dx: 0, dy: 1 })
 
@@ -73,7 +86,7 @@ export default function NaveScene({ stateRef, onExplorarPlaneta }: Props) {
 
     drawGridFloor(ctx, camera, CANVAS_W, CANVAS_H, TILE_SIZE, 'rgba(255,255,255,0.04)')
 
-    ctx.strokeStyle = '#3a3f55'
+    ctx.strokeStyle = '#23263a'
     ctx.lineWidth = 2
     ctx.strokeRect(
       MUNDO.x0 - camera.x,
@@ -82,42 +95,77 @@ export default function NaveScene({ stateRef, onExplorarPlaneta }: Props) {
       MUNDO.y1 - MUNDO.y0,
     )
 
-    const acao = acaoDisponivel(state)
+    for (const sala of SALAS) {
+      const sx0 = sala.area.x0 - camera.x
+      const sy0 = sala.area.y0 - camera.y
+      ctx.strokeStyle = '#3a3f55'
+      ctx.lineWidth = 2
+      ctx.strokeRect(sx0, sy0, sala.area.x1 - sala.area.x0, sala.area.y1 - sala.area.y0)
+      ctx.fillStyle = '#6b7280'
+      ctx.font = '13px sans-serif'
+      ctx.textAlign = 'left'
+      ctx.fillText(sala.nome, sx0 + 10, sy0 + 20)
 
-    for (const def of CONSTRUCOES) {
-      const nivel = nivelAtual(state, def.id)
-      const ex = def.posicao.x - camera.x
-      const ey = def.posicao.y - camera.y
+      sala.slots.forEach((slotPos, i) => {
+        const sx = slotPos.x - camera.x
+        const sy = slotPos.y - camera.y
+        const def = construcaoNoSlot(state, sala.id, i)
 
-      if (nivel >= 1) {
-        ctx.fillStyle = def.cor
-        ctx.fillRect(ex - 28, ey - 28, 56, 56)
-        ctx.fillStyle = '#e5e7eb'
-        ctx.font = '12px sans-serif'
-        ctx.textAlign = 'center'
-        ctx.fillText(`${def.nome} Nv${nivel}`, ex, ey + 44)
-      } else {
-        ctx.strokeStyle = 'rgba(192,132,252,0.5)'
-        ctx.setLineDash([4, 4])
-        ctx.strokeRect(ex - 28, ey - 28, 56, 56)
-        ctx.setLineDash([])
-        ctx.fillStyle = 'rgba(192,132,252,0.7)'
-        ctx.font = '11px sans-serif'
-        ctx.textAlign = 'center'
-        ctx.fillText(def.nome, ex, ey + 44)
-      }
+        if (def) {
+          const inst = state.construcoes[def.id]
+          ctx.fillStyle = def.cor
+          ctx.fillRect(sx - 28, sy - 28, 56, 56)
+          ctx.fillStyle = '#e5e7eb'
+          ctx.font = '12px sans-serif'
+          ctx.textAlign = 'center'
+          ctx.fillText(`${def.nome} Nv${inst.nivel}`, sx, sy + 44)
+          if (def.conversor) {
+            ctx.fillStyle = '#9ca3af'
+            ctx.font = '10px sans-serif'
+            ctx.fillText(descricaoConversor(def.conversor, inst.nivel), sx, sy + 58)
+          }
+        } else {
+          ctx.strokeStyle = 'rgba(255,255,255,0.15)'
+          ctx.setLineDash([4, 4])
+          ctx.strokeRect(sx - 28, sy - 28, 56, 56)
+          ctx.setLineDash([])
+        }
+      })
+    }
 
-      if (acao?.def.id === def.id) {
+    // cama do dormitório
+    const bx = CAMA.x - camera.x
+    const by = CAMA.y - camera.y
+    ctx.fillStyle = '#581c87'
+    ctx.fillRect(bx - 32, by - 18, 64, 36)
+    ctx.fillStyle = '#e5e7eb'
+    ctx.font = '12px sans-serif'
+    ctx.textAlign = 'center'
+    ctx.fillText('Cama', bx, by + 34)
+
+    // prompt de interação — upar tem prioridade sobre instalar
+    const upar = acaoUparDisponivel(state)
+    if (upar) {
+      const inst = state.construcoes[upar.id]
+      const sala = SALAS.find((s) => s.id === inst.salaId)
+      const slot = sala?.slots[inst.slotIndex ?? -1]
+      if (slot) {
         ctx.fillStyle = '#f3f4f6'
         ctx.font = 'bold 13px sans-serif'
-        ctx.fillText(
-          acao.tipo === 'construir' ? '[E] Construir' : `[E] Upar p/ Nv${nivel + 1}`,
-          ex,
-          ey - 40,
-        )
+        ctx.fillText(`[E] Upar p/ Nv${inst.nivel + 1}`, slot.x - camera.x, slot.y - camera.y - 40)
+      }
+    } else {
+      const slotVazio = slotVazioProximo(state)
+      const pend = pendentes(state)
+      if (slotVazio && pend.length > 0) {
+        const slot = slotVazio.sala.slots[slotVazio.slotIndex]
+        ctx.fillStyle = '#f3f4f6'
+        ctx.font = 'bold 13px sans-serif'
+        ctx.fillText(`[E] Instalar ${pend[0].nome}`, slot.x - camera.x, slot.y - camera.y - 40)
       }
     }
 
+    // personagem — sempre centralizado na tela
     const px = CANVAS_W / 2
     const py = CANVAS_H / 2
     ctx.fillStyle = '#f3f4f6'
@@ -153,11 +201,37 @@ export default function NaveScene({ stateRef, onExplorarPlaneta }: Props) {
     setHud(cloneForHud(stateRef.current))
   }
 
+  function remover() {
+    const def = construcaoColocadaProxima(stateRef.current)
+    if (!def) return
+    removerColocada(stateRef.current, def.id)
+    setHud(cloneForHud(stateRef.current))
+  }
+
+  function dormirAgora() {
+    const resultado = dormir(stateRef.current)
+    setHud(cloneForHud(stateRef.current))
+    const minutos = Math.round(resultado.segundosPassados / 60)
+    setAvisoSono(
+      resultado.teveAvaria
+        ? `Dormiu ~${minutos} min e acordou com uma pane na nave.`
+        : `Dormiu ~${minutos} min sem imprevistos.`,
+    )
+    setTimeout(() => setAvisoSono(null), 4000)
+  }
+
+  const construcaoProximaParaRemover = construcaoColocadaProxima(hud)
+  const pertoDaCama = pertoDe(hud, CAMA)
+
   return (
     <div className="nave-scene">
       <h2>Nave</h2>
-      <p className="dica">WASD/setas pra andar · chegue perto de um slot tracejado e aperte E pra construir</p>
+      <p className="dica">
+        WASD/setas pra andar · crie construções no menu abaixo · leve até um slot vazio e aperte E
+        pra instalar · chegue perto de uma instalada e aperte E pra upar
+      </p>
       <canvas ref={canvasRef} width={CANVAS_W} height={CANVAS_H} className="nave-canvas" />
+      {avisoSono && <p className="aviso-sono">{avisoSono}</p>}
 
       <div className="hud">
         <div className="hud-bar">
@@ -196,7 +270,23 @@ export default function NaveScene({ stateRef, onExplorarPlaneta }: Props) {
         <button type="button" onClick={reparar} disabled={!podeRepararCasco(hud)}>
           Reparar Casco (2 Peças)
         </button>
+        {construcaoProximaParaRemover && (
+          <button type="button" onClick={remover}>
+            Remover {construcaoProximaParaRemover.nome}
+          </button>
+        )}
+        {pertoDaCama && (
+          <button type="button" onClick={dormirAgora}>
+            Dormir
+          </button>
+        )}
       </div>
+
+      <ConstrucoesMenu
+        hud={hud}
+        stateRef={stateRef}
+        onChange={() => setHud(cloneForHud(stateRef.current))}
+      />
 
       <InventoryGrid
         inventario={hud.inventario}

@@ -7,20 +7,19 @@ export interface NivelCusto {
 export interface ConstrucaoDef {
   id: string
   nome: string
-  posicao: { x: number; y: number }
-  /** niveis[0] = custo pra construir (nível 1), niveis[1] = custo pra upar pra nível 2, niveis[2] = custo pra upar pra nível 3 */
+  /** niveis[0] = custo pra criar (nível 1), niveis[1] = custo pra upar pra nível 2, niveis[2] = custo pra upar pra nível 3 */
   niveis: NivelCusto[]
   conversor?: ConversorSpec
   cor: string
-  /** se true, não precisa de Bancada de Upgrade construída pra evoluir de nível (caso da própria Bancada) */
+  /** se true, não precisa de Bancada de Upgrade instalada pra evoluir de nível (caso da própria Bancada) */
   bancada?: boolean
 }
 
 export const CONSTRUCOES: ConstrucaoDef[] = [
+  // Suporte de Vida
   {
     id: 'eletrolisador',
     nome: 'Eletrolisador',
-    posicao: { x: 220, y: 180 },
     niveis: [
       { 'Ferro-Níquel': 3, 'Cobre Nativo': 2 },
       { 'Alumínio Purificado': 2, 'Resina Endurecida': 1 },
@@ -36,7 +35,6 @@ export const CONSTRUCOES: ConstrucaoDef[] = [
   {
     id: 'derretedorGelo',
     nome: 'Derretedor de Gelo',
-    posicao: { x: 420, y: 150 },
     niveis: [
       { 'Ferro-Níquel': 3, 'Basalto Denso': 2 },
       { 'Alumínio Purificado': 2 },
@@ -52,7 +50,6 @@ export const CONSTRUCOES: ConstrucaoDef[] = [
   {
     id: 'biorreator',
     nome: 'Biorreator de Algas',
-    posicao: { x: 620, y: 180 },
     niveis: [
       { 'Fibra Lenhosa': 3, 'Casca Fibrosa': 2 },
       { 'Resina Endurecida': 2 },
@@ -68,7 +65,6 @@ export const CONSTRUCOES: ConstrucaoDef[] = [
   {
     id: 'estufa',
     nome: 'Estufa/Hidroponia',
-    posicao: { x: 420, y: 400 },
     niveis: [
       { 'Fibra Lenhosa': 4, 'Casca Fibrosa': 2 },
       { 'Resina Endurecida': 2, 'Fibra Lenhosa': 1 },
@@ -81,10 +77,10 @@ export const CONSTRUCOES: ConstrucaoDef[] = [
     },
     cor: '#facc15',
   },
+  // Fabricação
   {
     id: 'oficina',
     nome: 'Oficina',
-    posicao: { x: 620, y: 400 },
     niveis: [
       { 'Ferro-Níquel': 4, 'Basalto Denso': 2 },
       { 'Aço Temperado': 2 },
@@ -100,7 +96,6 @@ export const CONSTRUCOES: ConstrucaoDef[] = [
   {
     id: 'triturador',
     nome: 'Triturador',
-    posicao: { x: 1000, y: 500 },
     niveis: [
       { 'Ferro-Níquel': 3, 'Osso Denso': 2 },
       { 'Aço Temperado': 2, 'Carapaça Quitinosa': 1 },
@@ -120,7 +115,6 @@ export const CONSTRUCOES: ConstrucaoDef[] = [
   {
     id: 'bancadaUpgrade',
     nome: 'Bancada de Upgrade',
-    posicao: { x: 150, y: 400 },
     niveis: [
       { 'Ferro-Níquel': 3, 'Cobre Nativo': 2 },
       { 'Aço Temperado': 2 },
@@ -129,10 +123,10 @@ export const CONSTRUCOES: ConstrucaoDef[] = [
     cor: '#a3a3a3',
     bancada: true,
   },
+  // Energia
   {
     id: 'geradorCombustivel',
     nome: 'Gerador a Combustível',
-    posicao: { x: 850, y: 180 },
     niveis: [
       { 'Ferro-Níquel': 3, 'Basalto Denso': 2 },
       { 'Prata Condutora': 2 },
@@ -147,7 +141,6 @@ export const CONSTRUCOES: ConstrucaoDef[] = [
   {
     id: 'painelSolar',
     nome: 'Painel Solar',
-    posicao: { x: 1000, y: 300 },
     niveis: [
       { 'Cobre Nativo': 2, 'Ferro-Níquel': 2, 'Fibra Lenhosa': 1 },
       { 'Prata Condutora': 2 },
@@ -161,7 +154,6 @@ export const CONSTRUCOES: ConstrucaoDef[] = [
   {
     id: 'otimizadorRede',
     nome: 'Otimizador de Rede',
-    posicao: { x: 850, y: 450 },
     niveis: [
       { 'Cobre Nativo': 4 },
       { 'Prata Condutora': 2 },

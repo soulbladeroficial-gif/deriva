@@ -22,6 +22,10 @@ export interface JogadorState {
 
 export interface ConstrucaoState {
   nivel: number
+  /** true = instalada numa sala (salaId/slotIndex definidos); false = criada mas ainda no inventário, esperando posicionamento */
+  colocada: boolean
+  salaId?: string
+  slotIndex?: number
 }
 
 export type ConstrucoesState = Record<string, ConstrucaoState>

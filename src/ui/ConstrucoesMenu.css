@@ -1,0 +1,65 @@
+.construcoes-menu h3 {
+  margin: 0 0 8px;
+  font-size: 14px;
+  color: #9ca3af;
+}
+
+.construcoes-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 420px;
+}
+
+.construcao-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px;
+  border: 1px solid #2e303a;
+  border-radius: 8px;
+  background: #11131c;
+}
+
+.construcao-cor {
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.construcao-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.construcao-nome {
+  font-size: 13px;
+}
+
+.construcao-status {
+  font-size: 11px;
+  color: #9ca3af;
+}
+
+.construcao-item button {
+  font: inherit;
+  font-size: 12px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: none;
+  background: rgba(192, 132, 252, 0.2);
+  color: #e5e7eb;
+  cursor: pointer;
+}
+
+.construcao-item button:hover:not(:disabled) {
+  background: rgba(192, 132, 252, 0.35);
+}
+
+.construcao-item button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
