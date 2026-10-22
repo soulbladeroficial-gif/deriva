@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type MutableRefObject } from 'react'
 import { useGameLoop } from '../engine/loop'
 import { createInputState, bindKeyboard } from '../engine/input'
+import { computeCamera } from '../engine/camera'
+import { drawGridFloor } from '../rendering/drawGridFloor'
 import { updateReatorPrincipal } from '../systems/reatorPrincipal'
 import { updateEletrolisador } from '../systems/eletrolisador'
 import { updateSobrevivencia } from '../systems/sobrevivencia'
@@ -20,8 +22,15 @@ import './NaveScene.css'
 
 const CANVAS_W = 640
 const CANVAS_H = 360
-const BOUNDS: Bounds = { x0: 100, y0: 100, x1: CANVAS_W - 100, y1: CANVAS_H - 100 }
-const SPAWN_NAVE = { x: 400, y: 260 }
+const MARGEM_CASCO = 40
+const MUNDO = { x0: 0, y0: 0, x1: 900, y1: 550 }
+const BOUNDS: Bounds = {
+  x0: MUNDO.x0 + MARGEM_CASCO,
+  y0: MUNDO.y0 + MARGEM_CASCO,
+  x1: MUNDO.x1 - MARGEM_CASCO,
+  y1: MUNDO.y1 - MARGEM_CASCO,
+}
+const SPAWN_NAVE = { x: 450, y: 275 }
 const TILE_SIZE = 32
 const PLAYER_RAIO = 12
 
@@ -62,30 +71,27 @@ export default function NaveScene({ stateRef, onExplorarPlaneta }: Props) {
     const ctx = canvas.getContext('2d')
     if (!ctx) return
 
+    const camera = computeCamera(state.posicao.x, state.posicao.y, CANVAS_W, CANVAS_H)
+
     ctx.fillStyle = '#0b0d14'
     ctx.fillRect(0, 0, canvas.width, canvas.height)
 
-    ctx.strokeStyle = 'rgba(255,255,255,0.04)'
-    ctx.lineWidth = 1
-    for (let x = BOUNDS.x0 - TILE_SIZE; x <= BOUNDS.x1 + TILE_SIZE; x += TILE_SIZE) {
-      ctx.beginPath()
-      ctx.moveTo(x, 70)
-      ctx.lineTo(x, canvas.height - 70)
-      ctx.stroke()
-    }
-    for (let y = 70; y <= canvas.height - 70; y += TILE_SIZE) {
-      ctx.beginPath()
-      ctx.moveTo(70, y)
-      ctx.lineTo(canvas.width - 70, y)
-      ctx.stroke()
-    }
+    drawGridFloor(ctx, camera, CANVAS_W, CANVAS_H, TILE_SIZE, 'rgba(255,255,255,0.04)')
 
+    // casco da nave (em coordenadas de mundo, convertido pra tela)
     ctx.strokeStyle = '#3a3f55'
     ctx.lineWidth = 2
-    ctx.strokeRect(70, 70, canvas.width - 140, canvas.height - 140)
+    ctx.strokeRect(
+      MUNDO.x0 - camera.x,
+      MUNDO.y0 - camera.y,
+      MUNDO.x1 - MUNDO.x0,
+      MUNDO.y1 - MUNDO.y0,
+    )
 
+    // slot do eletrolisador
     const construido = state.construcoes.eletrolisador.construido
-    const { x: ex, y: ey } = ELETROLISADOR_SLOT
+    const ex = ELETROLISADOR_SLOT.x - camera.x
+    const ey = ELETROLISADOR_SLOT.y - camera.y
     if (construido) {
       ctx.fillStyle = '#4fd1c5'
       ctx.fillRect(ex - 28, ey - 28, 56, 56)
@@ -110,7 +116,9 @@ export default function NaveScene({ stateRef, onExplorarPlaneta }: Props) {
       ctx.fillText('[E] Construir', ex, ey - 40)
     }
 
-    const { x: px, y: py } = state.posicao
+    // personagem — sempre centralizado na tela
+    const px = CANVAS_W / 2
+    const py = CANVAS_H / 2
     ctx.fillStyle = '#f3f4f6'
     ctx.beginPath()
     ctx.arc(px, py, PLAYER_RAIO, 0, Math.PI * 2)

@@ -1,7 +1,7 @@
 import type { GameState } from '../engine/types'
 import type { InputState } from '../engine/input'
 
-export const ELETROLISADOR_SLOT = { x: 150, y: 150 }
+export const ELETROLISADOR_SLOT = { x: 220, y: 180 }
 export const RAIO_INTERACAO = 55
 
 export const CUSTO_ELETROLISADOR: Record<string, number> = {

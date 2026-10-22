@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState, type MutableRefObject } from 'react'
 import { useGameLoop } from '../engine/loop'
 import { createInputState, bindKeyboard } from '../engine/input'
+import { computeCamera } from '../engine/camera'
+import { drawGridFloor } from '../rendering/drawGridFloor'
 import { updateSobrevivencia } from '../systems/sobrevivencia'
 import { updateMovimento, type Bounds } from '../systems/movimento'
 import { updateOxigenioTraje } from '../systems/oxigenioTraje'
@@ -14,8 +16,9 @@ import './PlanetaScene.css'
 
 const CANVAS_W = 640
 const CANVAS_H = 360
-const BOUNDS: Bounds = { x0: 20, y0: 20, x1: CANVAS_W - 20, y1: CANVAS_H - 20 }
-const SPAWN_PLANETA = { x: 120, y: 180 }
+const BOUNDS: Bounds = { x0: 20, y0: 20, x1: 1380, y1: 880 }
+const SPAWN_PLANETA = { x: 150, y: 450 }
+const TILE_SIZE = 32
 const PLAYER_RAIO = 12
 
 interface Props {
@@ -53,26 +56,16 @@ export default function PlanetaScene({ stateRef, onVoltarParaNave }: Props) {
     const ctx = canvas.getContext('2d')
     if (!ctx) return
 
+    const camera = computeCamera(state.posicao.x, state.posicao.y, CANVAS_W, CANVAS_H)
+
     ctx.fillStyle = '#3a2a1f'
     ctx.fillRect(0, 0, canvas.width, canvas.height)
 
-    ctx.strokeStyle = 'rgba(0,0,0,0.15)'
-    ctx.lineWidth = 1
-    for (let x = 0; x <= canvas.width; x += 32) {
-      ctx.beginPath()
-      ctx.moveTo(x, 0)
-      ctx.lineTo(x, canvas.height)
-      ctx.stroke()
-    }
-    for (let y = 0; y <= canvas.height; y += 32) {
-      ctx.beginPath()
-      ctx.moveTo(0, y)
-      ctx.lineTo(canvas.width, y)
-      ctx.stroke()
-    }
+    drawGridFloor(ctx, camera, CANVAS_W, CANVAS_H, TILE_SIZE, 'rgba(0,0,0,0.15)')
 
     // depósito de rochas
-    const { x: dx0, y: dy0 } = DEPOSITO_ROCHAS
+    const dx0 = DEPOSITO_ROCHAS.x - camera.x
+    const dy0 = DEPOSITO_ROCHAS.y - camera.y
     ctx.fillStyle = '#8a7a6a'
     ;[
       [0, 0],
@@ -95,8 +88,9 @@ export default function PlanetaScene({ stateRef, onVoltarParaNave }: Props) {
       ctx.fillText('[E] Minerar', dx0, dy0 - 32)
     }
 
-    // personagem
-    const { x: px, y: py } = state.posicao
+    // personagem — sempre centralizado na tela
+    const px = CANVAS_W / 2
+    const py = CANVAS_H / 2
     ctx.fillStyle = '#f3f4f6'
     ctx.beginPath()
     ctx.arc(px, py, PLAYER_RAIO, 0, Math.PI * 2)
