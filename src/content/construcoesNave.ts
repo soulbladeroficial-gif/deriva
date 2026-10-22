@@ -98,6 +98,26 @@ export const CONSTRUCOES: ConstrucaoDef[] = [
     cor: '#f97316',
   },
   {
+    id: 'triturador',
+    nome: 'Triturador',
+    posicao: { x: 1000, y: 500 },
+    niveis: [
+      { 'Ferro-Níquel': 3, 'Osso Denso': 2 },
+      { 'Aço Temperado': 2, 'Carapaça Quitinosa': 1 },
+      { Tungstênio: 2, 'Escama Blindada': 1 },
+    ],
+    conversor: {
+      // 1 Motor Velho -> 2 Ferro-Níquel + 1 Titânio Bruto (receita do GDD), em taxa contínua
+      consomeItem: { item: 'Motor Velho', taxa: 0.02 },
+      consomeEnergia: 2,
+      produzItens: [
+        { item: 'Ferro-Níquel', taxa: 0.04 },
+        { item: 'Titânio Bruto', taxa: 0.02 },
+      ],
+    },
+    cor: '#8b5cf6',
+  },
+  {
     id: 'bancadaUpgrade',
     nome: 'Bancada de Upgrade',
     posicao: { x: 150, y: 400 },

@@ -27,4 +27,12 @@ export const DEPOSITOS: DepositoDef[] = [
     quantidadePorColeta: 1,
     cor: '#d97706',
   },
+  {
+    id: 'anomalia',
+    nome: 'Destroço Anômalo',
+    posicao: { x: 1150, y: 500 },
+    itemColetado: 'Motor Velho',
+    quantidadePorColeta: 1,
+    cor: '#a78bfa',
+  },
 ]
