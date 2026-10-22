@@ -57,7 +57,8 @@ O jogador constrói do zero. A maioria tem **níveis de upgrade** (1, 2, 3), cad
 - **Gerador a Combustível** — queima combustível coletado; geração alta, limitada ao estoque.
 - **Painel Solar** — passivo; eficiência varia com a proximidade de uma estrela na rota.
 - **Otimizador de Rede** — não gera energia, reduz o consumo de todos os sistemas ligados.
-- **Reator Auxiliar Avançado** — usa cristal de energia como combustível; output alto, caro de manter.
+- **Reator Auxiliar Avançado** — queima qualquer combustível, output alto; alguns combustíveis dão bônus de energia específicos dele.
+- **Reator Nuclear** — único caso exclusivo do jogo: só funciona com Urânio, nenhum outro combustível serve nele.
 
 ### Suporte de Vida
 - **Eletrolisador** — água + energia → O2 da nave.
@@ -166,7 +167,24 @@ Equipamento do jogador, upa via Bancada de Upgrade.
 - Ovo/Ninhada → Ovo Cozido
 - Fruta Silvestre → Fruta Desidratada
 
-**Energético, Exótico**: ainda não definidos.
+**Energético** (fechado)
+
+Regra geral: qualquer combustível funciona em qualquer construção que precise de combustível (Gerador a Combustível, Reator Auxiliar Avançado, Fornalha, Estação de Drones). A única exceção do jogo é o **Urânio, exclusivo do Reator Nuclear**. Fora isso, o que muda de um combustível pro outro é a duração (estoque próprio do item) e, em alguns casos, um bônus de energia específico pra um local.
+
+| Material | Classe | Raridade | Duração | Bônus |
+|---|---|---|---|---|
+| Metano Bruto | Furos | comum | 6 | — |
+| Hidrogênio Gasoso | Furos | comum | 10 | — |
+| Minério Fissionável | Rochas | incomum | 20 | — |
+| Hidrogênio Pressurizado | Furos | incomum | 14 | — |
+| Nitrogênio Comprimido | Furos | incomum | 12 | +15% energia no Gerador a Combustível |
+| Cristal de Energia | Rochas | raro | 26 | +20% energia no Reator Auxiliar Avançado |
+| Plasma Condensado | Furos | raro | 18 | +20% energia no Gerador a Combustível |
+| Octano | Furos | raro | 16 | +20% de produtividade na Estação de Drones |
+| Urânio | Rochas | raro | 30 | **exclusivo do Reator Nuclear** — não funciona em mais nada |
+| Pó de Tório | Rochas | muito raro | 32 | +35% energia no Reator Auxiliar Avançado |
+
+**Exótico**: ainda não definido.
 
 ## Receitas de construção (Estrutural)
 
@@ -179,6 +197,7 @@ Cada categoria de construção tem sua própria "linha" de material incomum/raro
 | Otimizador de Rede | Cobre Nativo | Prata Condutora | Liga Supercondutora |
 | Reator Auxiliar Avançado | Ferro-Níquel + Prata Condutora | Liga Supercondutora | 2x Liga Supercondutora + Seiva Cristalizada |
 | Reator Principal (fábrica) | — | Prata Condutora | Liga Supercondutora |
+| Reator Nuclear | Ferro-Níquel + Prata Condutora | Liga Supercondutora | 2x Liga Supercondutora |
 | Eletrolisador | Ferro-Níquel + Cobre Nativo | Alumínio Purificado + Resina Endurecida | Liga Anticorrosiva |
 | Derretedor de Gelo | Ferro-Níquel + Basalto Denso | Alumínio Purificado | Liga Anticorrosiva |
 | Estação de Recarga de Traje (fábrica) | — | Alumínio Purificado | Liga Anticorrosiva |
@@ -201,5 +220,5 @@ Cada categoria de construção tem sua própria "linha" de material incomum/raro
 
 - Mecânica de automação entre bancadas (ideia inicial rejeitada, revisar).
 - Classes de planeta/bioma (só rascunho inicial, não confirmado).
-- Itens Energéticos e Exóticos específicos.
+- Itens Exóticos específicos.
 - Nomes e receitas específicas do Triturador (ex: quais itens exóticos existem e o que cada um gera).
