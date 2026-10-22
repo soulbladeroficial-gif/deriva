@@ -3,35 +3,30 @@ import { useGameLoop } from '../engine/loop'
 import { createInputState, bindKeyboard } from '../engine/input'
 import { computeCamera } from '../engine/camera'
 import { drawGridFloor } from '../rendering/drawGridFloor'
+import { drawEspacoExterior, drawCascoNave } from '../rendering/drawShipHull'
 import { updateReatorPrincipal } from '../systems/reatorPrincipal'
 import { updateSobrevivencia } from '../systems/sobrevivencia'
 import { updateMovimento, type Bounds } from '../systems/movimento'
 import {
-  acaoUparDisponivel,
-  capacidadeBuffer,
   construcaoColocadaProxima,
-  construcaoNoSlot,
-  depositar,
+  construcaoPorId,
+  descricaoBufferDef,
   pendentes,
   pertoDe,
-  podeDepositar,
-  removerColocada,
-  slotVazioProximo,
+  podeColocarEm,
   updateConstrucoesNave,
 } from '../systems/construcoesNave'
-import { descricaoBuffer, descricaoConversor } from '../systems/conversor'
+import { descricaoConversor } from '../systems/conversor'
 import { updatePanes, podeRepararCasco, repararCasco } from '../systems/casco'
 import { dormir } from '../systems/dormitorio'
 import { SALAS, CAMA } from '../content/salasNave'
 import { cloneForHud } from '../state/cloneForHud'
-import InventoryGrid from '../ui/InventoryGrid'
-import ConstrucoesMenu from '../ui/ConstrucoesMenu'
+import InventarioModal from '../ui/InventarioModal'
+import ConstrucaoDetalheModal from '../ui/ConstrucaoDetalheModal'
 import type { GameState } from '../engine/types'
 import type { InputState } from '../engine/input'
 import './NaveScene.css'
 
-const CANVAS_W = 640
-const CANVAS_H = 360
 const MARGEM_CASCO = 40
 const MUNDO = { x0: 0, y0: 0, x1: 1400, y1: 820 }
 const BOUNDS: Bounds = {
@@ -53,12 +48,26 @@ export default function NaveScene({ stateRef, onExplorarPlaneta }: Props) {
   const inputRef = useRef<InputState>(createInputState())
   const [hud, setHud] = useState(() => cloneForHud(stateRef.current))
   const [avisoSono, setAvisoSono] = useState<string | null>(null)
+  const [inventarioAberto, setInventarioAberto] = useState(false)
+  const [detalheId, setDetalheId] = useState<string | null>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const facingRef = useRef<{ dx: number; dy: number }>({ dx: 0, dy: 1 })
 
   useEffect(() => {
     stateRef.current.posicao = { ...SPAWN_NAVE }
   }, [stateRef])
+
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    function resize() {
+      canvas.width = window.innerWidth
+      canvas.height = window.innerHeight
+    }
+    resize()
+    window.addEventListener('resize', resize)
+    return () => window.removeEventListener('resize', resize)
+  }, [])
 
   const update = useCallback((state: GameState, dt: number) => {
     const input = inputRef.current
@@ -82,21 +91,13 @@ export default function NaveScene({ stateRef, onExplorarPlaneta }: Props) {
     const ctx = canvas.getContext('2d')
     if (!ctx) return
 
-    const camera = computeCamera(state.posicao.x, state.posicao.y, CANVAS_W, CANVAS_H)
+    const viewW = canvas.width
+    const viewH = canvas.height
+    const camera = computeCamera(state.posicao.x, state.posicao.y, viewW, viewH)
 
-    ctx.fillStyle = '#0b0d14'
-    ctx.fillRect(0, 0, canvas.width, canvas.height)
-
-    drawGridFloor(ctx, camera, CANVAS_W, CANVAS_H, TILE_SIZE, 'rgba(255,255,255,0.04)')
-
-    ctx.strokeStyle = '#23263a'
-    ctx.lineWidth = 2
-    ctx.strokeRect(
-      MUNDO.x0 - camera.x,
-      MUNDO.y0 - camera.y,
-      MUNDO.x1 - MUNDO.x0,
-      MUNDO.y1 - MUNDO.y0,
-    )
+    drawEspacoExterior(ctx, camera, viewW, viewH)
+    drawCascoNave(ctx, camera, MUNDO)
+    drawGridFloor(ctx, camera, viewW, viewH, TILE_SIZE, 'rgba(255,255,255,0.04)')
 
     for (const sala of SALAS) {
       const sx0 = sala.area.x0 - camera.x
@@ -104,41 +105,35 @@ export default function NaveScene({ stateRef, onExplorarPlaneta }: Props) {
       ctx.strokeStyle = '#3a3f55'
       ctx.lineWidth = 2
       ctx.strokeRect(sx0, sy0, sala.area.x1 - sala.area.x0, sala.area.y1 - sala.area.y0)
-      ctx.fillStyle = '#6b7280'
-      ctx.font = '13px sans-serif'
-      ctx.textAlign = 'left'
-      ctx.fillText(sala.nome, sx0 + 10, sy0 + 20)
+    }
 
-      sala.slots.forEach((slotPos, i) => {
-        const sx = slotPos.x - camera.x
-        const sy = slotPos.y - camera.y
-        const def = construcaoNoSlot(state, sala.id, i)
-
-        if (def) {
-          const inst = state.construcoes[def.id]
-          ctx.fillStyle = def.cor
-          ctx.fillRect(sx - 28, sy - 28, 56, 56)
-          ctx.fillStyle = '#e5e7eb'
-          ctx.font = '12px sans-serif'
-          ctx.textAlign = 'center'
-          ctx.fillText(`${def.nome} Nv${inst.nivel}`, sx, sy + 44)
-          if (def.conversor) {
-            ctx.fillStyle = '#9ca3af'
-            ctx.font = '10px sans-serif'
-            ctx.fillText(descricaoConversor(def.conversor, inst.nivel), sx, sy + 58)
-            const bufferTexto = descricaoBuffer(def.conversor, inst.bufferEntrada, capacidadeBuffer(def))
-            if (bufferTexto) {
-              ctx.fillStyle = '#7dd3fc'
-              ctx.fillText(bufferTexto, sx, sy + 70)
-            }
-          }
-        } else {
-          ctx.strokeStyle = 'rgba(255,255,255,0.15)'
-          ctx.setLineDash([4, 4])
-          ctx.strokeRect(sx - 28, sy - 28, 56, 56)
-          ctx.setLineDash([])
+    for (const defId of Object.keys(state.construcoes)) {
+      const inst = state.construcoes[defId]
+      if (!inst?.colocada || inst.posX === undefined || inst.posY === undefined) continue
+      const d = construcaoPorId(defId)
+      if (!d) continue
+      const sx = inst.posX - camera.x
+      const sy = inst.posY - camera.y
+      ctx.fillStyle = d.cor
+      ctx.fillRect(sx - 28, sy - 28, 56, 56)
+      ctx.fillStyle = '#e5e7eb'
+      ctx.font = '12px sans-serif'
+      ctx.textAlign = 'center'
+      ctx.fillText(`${d.nome} Nv${inst.nivel}`, sx, sy + 44)
+      if (d.conversor) {
+        const texto = descricaoConversor(d.conversor, inst.nivel)
+        if (texto) {
+          ctx.fillStyle = '#9ca3af'
+          ctx.font = '10px sans-serif'
+          ctx.fillText(texto, sx, sy + 58)
         }
-      })
+      }
+      const bufferTexto = descricaoBufferDef(d, inst)
+      if (bufferTexto) {
+        ctx.fillStyle = '#7dd3fc'
+        ctx.font = '10px sans-serif'
+        ctx.fillText(bufferTexto, sx, sy + 70)
+      }
     }
 
     // cama do dormitório
@@ -151,31 +146,22 @@ export default function NaveScene({ stateRef, onExplorarPlaneta }: Props) {
     ctx.textAlign = 'center'
     ctx.fillText('Cama', bx, by + 34)
 
-    // prompt de interação — upar tem prioridade sobre instalar
-    const upar = acaoUparDisponivel(state)
-    if (upar) {
-      const inst = state.construcoes[upar.id]
-      const sala = SALAS.find((s) => s.id === inst.salaId)
-      const slot = sala?.slots[inst.slotIndex ?? -1]
-      if (slot) {
-        ctx.fillStyle = '#f3f4f6'
-        ctx.font = 'bold 13px sans-serif'
-        ctx.fillText(`[E] Upar p/ Nv${inst.nivel + 1}`, slot.x - camera.x, slot.y - camera.y - 40)
-      }
-    } else {
-      const slotVazio = slotVazioProximo(state)
-      const pend = pendentes(state)
-      if (slotVazio && pend.length > 0) {
-        const slot = slotVazio.sala.slots[slotVazio.slotIndex]
-        ctx.fillStyle = '#f3f4f6'
-        ctx.font = 'bold 13px sans-serif'
-        ctx.fillText(`[E] Instalar ${pend[0].nome}`, slot.x - camera.x, slot.y - camera.y - 40)
-      }
+    // prompt de instalação livre — jogador segurando uma construção pendente
+    const pend = pendentes(state)[0]
+    if (pend) {
+      const valido = podeColocarEm(state, state.posicao)
+      ctx.fillStyle = valido ? '#f3f4f6' : '#f87171'
+      ctx.font = 'bold 13px sans-serif'
+      ctx.fillText(
+        valido ? `[E] Instalar ${pend.nome} aqui` : `${pend.nome} pronta — ache um espaço livre numa sala`,
+        viewW / 2,
+        viewH / 2 - 40,
+      )
     }
 
     // personagem — sempre centralizado na tela
-    const px = CANVAS_W / 2
-    const py = CANVAS_H / 2
+    const px = viewW / 2
+    const py = viewH / 2
     ctx.fillStyle = '#f3f4f6'
     ctx.beginPath()
     ctx.arc(px, py, PLAYER_RAIO, 0, Math.PI * 2)
@@ -209,20 +195,6 @@ export default function NaveScene({ stateRef, onExplorarPlaneta }: Props) {
     setHud(cloneForHud(stateRef.current))
   }
 
-  function remover() {
-    const def = construcaoColocadaProxima(stateRef.current)
-    if (!def) return
-    removerColocada(stateRef.current, def.id)
-    setHud(cloneForHud(stateRef.current))
-  }
-
-  function depositarAgora() {
-    const def = construcaoColocadaProxima(stateRef.current)
-    if (!def) return
-    depositar(stateRef.current, def.id)
-    setHud(cloneForHud(stateRef.current))
-  }
-
   function dormirAgora() {
     const resultado = dormir(stateRef.current)
     setHud(cloneForHud(stateRef.current))
@@ -235,70 +207,61 @@ export default function NaveScene({ stateRef, onExplorarPlaneta }: Props) {
     setTimeout(() => setAvisoSono(null), 4000)
   }
 
-  const construcaoProximaParaRemover = construcaoColocadaProxima(hud)
+  const construcaoProxima = construcaoColocadaProxima(hud)
   const pertoDaCama = pertoDe(hud, CAMA)
+  const detalheDef = detalheId ? construcaoPorId(detalheId) : null
 
   return (
     <div className="nave-scene">
-      <h2>Nave</h2>
-      <p className="dica">
-        WASD/setas pra andar · crie construções no menu abaixo · leve até um slot vazio e aperte E
-        pra instalar · chegue perto de uma instalada e aperte E pra upar · construções que
-        processam material (Eletrolisador, Oficina etc.) têm um estoque próprio — deposite o
-        material nelas pra elas funcionarem
-      </p>
-      <canvas ref={canvasRef} width={CANVAS_W} height={CANVAS_H} className="nave-canvas" />
-      {avisoSono && <p className="aviso-sono">{avisoSono}</p>}
+      <canvas ref={canvasRef} className="nave-canvas-full" />
 
-      <div className="hud">
-        <div className="hud-bar">
+      <div className="hud-nave">
+        <span className="hud-titulo">NAVE</span>
+        <div className="hud-linha">
           <span>Casco</span>
           <progress value={hud.nave.casco} max={hud.nave.cascoMax} />
-          <small>{hud.nave.casco.toFixed(0)} / {hud.nave.cascoMax}</small>
         </div>
-        <div className="hud-bar">
+        <div className="hud-linha">
           <span>Energia</span>
           <progress value={hud.nave.energiaConsumida} max={Math.max(hud.nave.energiaGerada, 1)} />
-          <small>{hud.nave.energiaConsumida.toFixed(1)} / {hud.nave.energiaGerada.toFixed(1)} W</small>
         </div>
-        <div className="hud-bar">
-          <span>O2 da nave</span>
+        <div className="hud-linha">
+          <span>O2</span>
           <progress value={hud.nave.oxigenio} max={hud.nave.oxigenioMax} />
-          <small>{hud.nave.oxigenio.toFixed(0)} / {hud.nave.oxigenioMax}</small>
         </div>
-        <div className="hud-bar">
+      </div>
+
+      <div className="hud-jogador">
+        <span className="hud-titulo">JOGADOR</span>
+        <div className="hud-linha">
           <span>Fome</span>
           <progress value={hud.jogador.fome} max={100} />
         </div>
-        <div className="hud-bar">
+        <div className="hud-linha">
           <span>Sede</span>
           <progress value={hud.jogador.sede} max={100} />
         </div>
-        <div className="hud-bar">
+        <div className="hud-linha">
           <span>Vida</span>
           <progress value={hud.jogador.vida} max={hud.jogador.vidaMax} />
         </div>
       </div>
 
+      {avisoSono && <p className="aviso-sono">{avisoSono}</p>}
+
       <div className="acoes">
+        <button type="button" onClick={() => setInventarioAberto(true)}>
+          Inventário
+        </button>
         <button type="button" onClick={onExplorarPlaneta}>
           Explorar planeta próximo (Rochoso Árido)
         </button>
         <button type="button" onClick={reparar} disabled={!podeRepararCasco(hud)}>
           Reparar Casco (2 Peças)
         </button>
-        {construcaoProximaParaRemover && (
-          <button type="button" onClick={remover}>
-            Remover {construcaoProximaParaRemover.nome}
-          </button>
-        )}
-        {construcaoProximaParaRemover?.conversor?.consomeItem && (
-          <button
-            type="button"
-            onClick={depositarAgora}
-            disabled={!podeDepositar(hud, construcaoProximaParaRemover)}
-          >
-            Depositar {construcaoProximaParaRemover.conversor.consomeItem.item}
+        {construcaoProxima && (
+          <button type="button" onClick={() => setDetalheId(construcaoProxima.id)}>
+            Abrir {construcaoProxima.nome}
           </button>
         )}
         {pertoDaCama && (
@@ -308,17 +271,24 @@ export default function NaveScene({ stateRef, onExplorarPlaneta }: Props) {
         )}
       </div>
 
-      <ConstrucoesMenu
-        hud={hud}
-        stateRef={stateRef}
-        onChange={() => setHud(cloneForHud(stateRef.current))}
-      />
+      {inventarioAberto && (
+        <InventarioModal
+          hud={hud}
+          stateRef={stateRef}
+          onChange={() => setHud(cloneForHud(stateRef.current))}
+          onClose={() => setInventarioAberto(false)}
+        />
+      )}
 
-      <InventoryGrid
-        inventario={hud.inventario}
-        stateRef={stateRef}
-        onChange={() => setHud(cloneForHud(stateRef.current))}
-      />
+      {detalheDef && (
+        <ConstrucaoDetalheModal
+          def={detalheDef}
+          hud={hud}
+          stateRef={stateRef}
+          onChange={() => setHud(cloneForHud(stateRef.current))}
+          onClose={() => setDetalheId(null)}
+        />
+      )}
     </div>
   )
 }

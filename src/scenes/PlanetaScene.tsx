@@ -9,7 +9,7 @@ import { updateOxigenioTraje } from '../systems/oxigenioTraje'
 import { updateColeta, depositoMaisProximo } from '../systems/coleta'
 import { DEPOSITOS, NOME_PLANETA } from '../content/rochosoArido'
 import { cloneForHud } from '../state/cloneForHud'
-import InventoryGrid from '../ui/InventoryGrid'
+import InventarioModal from '../ui/InventarioModal'
 import type { GameState } from '../engine/types'
 import type { InputState } from '../engine/input'
 import './PlanetaScene.css'
@@ -29,6 +29,7 @@ interface Props {
 export default function PlanetaScene({ stateRef, onVoltarParaNave }: Props) {
   const inputRef = useRef<InputState>(createInputState())
   const [hud, setHud] = useState(() => cloneForHud(stateRef.current))
+  const [inventarioAberto, setInventarioAberto] = useState(false)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const facingRef = useRef<{ dx: number; dy: number }>({ dx: 0, dy: 1 })
 
@@ -154,16 +155,22 @@ export default function PlanetaScene({ stateRef, onVoltarParaNave }: Props) {
       </div>
 
       <div className="acoes">
+        <button type="button" onClick={() => setInventarioAberto(true)}>
+          Inventário
+        </button>
         <button type="button" onClick={voltar}>
           Voltar pra nave
         </button>
       </div>
 
-      <InventoryGrid
-        inventario={hud.inventario}
-        stateRef={stateRef}
-        onChange={() => setHud(cloneForHud(stateRef.current))}
-      />
+      {inventarioAberto && (
+        <InventarioModal
+          hud={hud}
+          stateRef={stateRef}
+          onChange={() => setHud(cloneForHud(stateRef.current))}
+          onClose={() => setInventarioAberto(false)}
+        />
+      )}
     </div>
   )
 }

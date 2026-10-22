@@ -22,10 +22,10 @@ export interface JogadorState {
 
 export interface ConstrucaoState {
   nivel: number
-  /** true = instalada numa sala (salaId/slotIndex definidos); false = criada mas ainda no inventário, esperando posicionamento */
+  /** true = instalada livremente em algum ponto do chão da nave (posX/posY definidos); false = criada mas ainda no inventário, esperando posicionamento */
   colocada: boolean
-  salaId?: string
-  slotIndex?: number
+  posX?: number
+  posY?: number
   /** estoque próprio da construção pro material de entrada — só mexe no inventário geral quando o jogador deposita */
   bufferEntrada: number
 }

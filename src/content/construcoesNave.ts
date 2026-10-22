@@ -4,6 +4,13 @@ export interface NivelCusto {
   [item: string]: number
 }
 
+/** receita de fabricação: ação discreta (botão "Criar"), diferente do conversor contínuo */
+export interface CraftRecipe {
+  custoBuffer: number
+  produzItem: string
+  produzQtd: number
+}
+
 export interface ConstrucaoDef {
   id: string
   nome: string
@@ -13,8 +20,12 @@ export interface ConstrucaoDef {
   cor: string
   /** se true, não precisa de Bancada de Upgrade instalada pra evoluir de nível (caso da própria Bancada) */
   bancada?: boolean
-  /** capacidade do estoque próprio pro material de entrada (só relevante se conversor.consomeItem existir) */
+  /** capacidade do estoque próprio pro material de entrada (só relevante se tiver insumo, via conversor ou craft) */
   capacidadeBuffer?: number
+  /** item que essa construção aceita no estoque próprio, quando não é o mesmo do conversor (ex: Oficina) */
+  insumo?: { item: string }
+  /** receita de fabricação sob demanda (ex: Oficina: deposita Ferro-Níquel, clica "Criar Peças") */
+  craft?: CraftRecipe
 }
 
 export const CAPACIDADE_BUFFER_PADRAO = 10
@@ -90,11 +101,8 @@ export const CONSTRUCOES: ConstrucaoDef[] = [
       { 'Aço Temperado': 2 },
       { Tungstênio: 2 },
     ],
-    conversor: {
-      consomeItem: { item: 'Ferro-Níquel', taxa: 0.05 },
-      consomeEnergia: 3,
-      produzItem: { item: 'Peças', taxa: 0.03 },
-    },
+    insumo: { item: 'Ferro-Níquel' },
+    craft: { custoBuffer: 2, produzItem: 'Peças', produzQtd: 1 },
     cor: '#f97316',
   },
   {
