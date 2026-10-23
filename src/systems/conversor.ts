@@ -147,3 +147,55 @@ export function efeitosConversor(spec: ConversorSpec, nivel: number): Efeito[] {
   }
   return efeitos
 }
+
+/** uma "porção" de entrada ou saída de um processo, sempre em número inteiro */
+export interface PorcaoProcesso {
+  icone: string
+  cor: string
+  rotulo: string
+  qtd: number
+}
+
+/** processo em número inteiro: "1 Água Pura → 2 Oxigênio, a cada 20s" em vez de taxas quebradas por segundo */
+export interface Processo {
+  tempoSegundos: number
+  entrada: PorcaoProcesso
+  saidas: PorcaoProcesso[]
+  /** texto de energia pra mostrar junto por enquanto (ex: "-3.0W") */
+  energiaTexto?: string
+}
+
+/** só existe processo pra conversores que têm um insumo contínuo (consomeItem) */
+export function processoConversor(spec: ConversorSpec, nivel: number): Processo | null {
+  if (!spec.consomeItem) return null
+  const taxaConsumo = spec.consomeItem.taxa * multiplicadorConsumo(nivel)
+  if (taxaConsumo <= 0) return null
+  const tempoSegundos = Math.max(1, Math.round(1 / taxaConsumo))
+
+  const saidas: PorcaoProcesso[] = []
+  if (spec.produzItem) {
+    const qtd = Math.max(1, Math.round(spec.produzItem.taxa * multiplicadorProducao(nivel) * tempoSegundos))
+    saidas.push({ icone: spec.produzItem.item.slice(0, 2).toUpperCase(), cor: POSITIVO, rotulo: spec.produzItem.item, qtd })
+  }
+  if (spec.produzItens) {
+    for (const s of spec.produzItens) {
+      const qtd = Math.max(1, Math.round(s.taxa * multiplicadorProducao(nivel) * tempoSegundos))
+      saidas.push({ icone: s.item.slice(0, 2).toUpperCase(), cor: POSITIVO, rotulo: s.item, qtd })
+    }
+  }
+  if (spec.produzO2Nave) {
+    const qtd = Math.max(1, Math.round(spec.produzO2Nave * multiplicadorProducao(nivel) * tempoSegundos))
+    saidas.push({ icone: 'O2', cor: POSITIVO, rotulo: 'Oxigênio', qtd })
+  }
+
+  let energiaTexto: string | undefined
+  if (spec.consomeEnergia) energiaTexto = `-${(spec.consomeEnergia * multiplicadorConsumo(nivel)).toFixed(1)}W`
+  else if (spec.produzEnergia) energiaTexto = `+${(spec.produzEnergia * multiplicadorProducao(nivel)).toFixed(1)}W`
+
+  return {
+    tempoSegundos,
+    entrada: { icone: spec.consomeItem.item.slice(0, 2).toUpperCase(), cor: NEGATIVO, rotulo: spec.consomeItem.item, qtd: 1 },
+    saidas,
+    energiaTexto,
+  }
+}

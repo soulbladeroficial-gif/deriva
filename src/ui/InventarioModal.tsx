@@ -81,7 +81,7 @@ export default function InventarioModal({ hud, stateRef, onChange, onClose, onPo
                   >
                     <span className="item-icon">{item.slice(0, 2).toUpperCase()}</span>
                     <span className="item-nome">{item}</span>
-                    <span className="item-qtd">{qtd.toFixed(1)}</span>
+                    <span className="item-qtd">{Math.round(qtd)}</span>
                   </button>
                   {aberto && (
                     <div className="item-acoes">

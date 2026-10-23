@@ -104,19 +104,21 @@ export function podeDepositar(state: GameState, def: ConstrucaoDef, inst: Constr
   return quantidadeParaDepositar(state, def, inst) > 0
 }
 
-/** texto tipo "Ferro-Níquel: 3.0/10" pro estoque próprio, independente de ser conversor ou craft */
+/** texto tipo "Ferro-Níquel: 3/10" pro estoque próprio, independente de ser conversor ou craft — sempre inteiro */
 export function descricaoBufferDef(def: ConstrucaoDef, inst: { bufferEntrada: number }): string | null {
   const insumo = insumoDe(def)
   if (!insumo) return null
-  return `${insumo.item}: ${inst.bufferEntrada.toFixed(1)}/${capacidadeBuffer(def)}`
+  return `${insumo.item}: ${Math.round(inst.bufferEntrada)}/${capacidadeBuffer(def)}`
 }
 
-export function depositar(state: GameState, instId: string) {
+/** deposita a quantidade escolhida (ou o máximo disponível, se não informada) */
+export function depositar(state: GameState, instId: string, quantidade?: number) {
   const inst = instanciaPorId(state, instId)
   const def = inst && construcaoPorId(inst.defId)
   const insumo = def && insumoDe(def)
   if (!def || !insumo || !inst) return
-  const qtd = quantidadeParaDepositar(state, def, inst)
+  const maximo = quantidadeParaDepositar(state, def, inst)
+  const qtd = Math.max(0, Math.min(quantidade ?? maximo, maximo))
   if (qtd <= 0) return
   state.inventario[insumo.item] -= qtd
   inst.bufferEntrada += qtd

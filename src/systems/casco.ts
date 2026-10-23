@@ -1,18 +1,18 @@
 import type { GameState } from '../engine/types'
-import { PAREDES } from '../content/salasNave'
+import { PAREDES_EXTERNAS } from '../content/salasNave'
 
 // valores altos de propósito nesse protótipo, pra dar pra testar sem esperar muito —
 // balanceamento de verdade fica pra quando o jogo tiver conteúdo suficiente pra calibrar.
-const CHANCE_PANE_POR_SEGUNDO = 0.02
+const CHANCE_PANE_POR_SEGUNDO = 0.006
 const DANO_PANE = 15
 const DANO_VIDA_PANE = 8
 const VAZAMENTO_O2_POR_SEGUNDO = 6
 
 export const RAIO_REPARO = 60
 
-/** escolhe um ponto no meio de uma parede aleatória pra ser o local da rachadura */
+/** escolhe um ponto no meio de uma parede externa aleatória (que encosta no casco) pra rachar */
 function escolherLocalDaAvaria(): { x: number; y: number } {
-  const parede = PAREDES[Math.floor(Math.random() * PAREDES.length)]
+  const parede = PAREDES_EXTERNAS[Math.floor(Math.random() * PAREDES_EXTERNAS.length)]
   return { x: (parede.x0 + parede.x1) / 2, y: (parede.y0 + parede.y1) / 2 }
 }
 

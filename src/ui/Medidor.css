@@ -1,0 +1,34 @@
+.medidor {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.medidor-topo {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+}
+
+.medidor-rotulo {
+  color: #e5e7eb;
+}
+
+.medidor-valor {
+  color: #9ca3af;
+  font-weight: 600;
+}
+
+.medidor-trilho {
+  height: 10px;
+  border-radius: 999px;
+  background: #1a1c27;
+  border: 1px solid #2e303a;
+  overflow: hidden;
+}
+
+.medidor-preenchido {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.2s;
+}

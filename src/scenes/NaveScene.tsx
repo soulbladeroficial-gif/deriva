@@ -12,15 +12,14 @@ import {
   construcaoPorId,
   hitboxesConstrucoes,
   instanciaPorId,
-  pertoDe,
   podeColocarEm,
   colocarPendente,
   updateConstrucoesNave,
 } from '../systems/construcoesNave'
-import { BANCADA_FABRICACAO_ID } from '../content/construcoesNave'
+import { BANCADA_FABRICACAO_ID, PAINEL_NAVE_ID, CAMA_ID } from '../content/construcoesNave'
 import { updatePanes, podeRepararCasco, repararCasco, pertoDaAvaria } from '../systems/casco'
 import { dormir } from '../systems/dormitorio'
-import { PAREDES, SALAS, CAMA, SAIDA, RAIO_SALA, TUBOS, LARGURA_TUBO } from '../content/salasNave'
+import { PAREDES, SALAS, SAIDA, RAIO_SALA, TUBOS, LARGURA_TUBO } from '../content/salasNave'
 import { cloneForHud } from '../state/cloneForHud'
 import InventarioModal from '../ui/InventarioModal'
 import ConstrucaoDetalheModal from '../ui/ConstrucaoDetalheModal'
@@ -31,22 +30,24 @@ import type { InputState } from '../engine/input'
 import './NaveScene.css'
 
 const MARGEM_CASCO = 40
-const MUNDO = { x0: 0, y0: 0, x1: 1400, y1: 1120 }
+const MUNDO = { x0: 0, y0: 0, x1: 1400, y1: 1200 }
 const BOUNDS: Bounds = {
   x0: MUNDO.x0 + MARGEM_CASCO,
   y0: MUNDO.y0 + MARGEM_CASCO,
   x1: MUNDO.x1 - MARGEM_CASCO,
   y1: MUNDO.y1 - MARGEM_CASCO,
 }
-const SPAWN_NAVE = { x: 700, y: 360 }
+const SPAWN_NAVE = { x: 720, y: 320 }
 const TILE_SIZE = 32
 const PLAYER_RAIO = 12
 /** quanto mais perto a câmera fica — não dá mais pra ver a nave toda de uma vez */
 const ZOOM = 1.7
-/** vista superior levemente inclinada (~30°) — achata o eixo Y na hora de desenhar */
-const INCLINACAO = (30 * Math.PI) / 180
-const ZOOM_Y = ZOOM * Math.cos(INCLINACAO)
-const COR_PISO_SALA = '#15182a'
+/** vista superior inclinada — achata o eixo Y visivelmente na hora de desenhar (efeito tem que ser óbvio) */
+const INCLINACAO_Y = 0.62
+const ZOOM_Y = ZOOM * INCLINACAO_Y
+const COR_PISO_SALA = '#1b2036'
+const COR_PAREDE = '#565d82'
+const ESPESSURA_PAREDE_VISUAL = 14
 
 interface Props {
   stateRef: MutableRefObject<GameState>
@@ -133,7 +134,7 @@ export default function NaveScene({ stateRef, onExplorarPlaneta }: Props) {
       drawGridFloor(ctx, camera, viewW, viewH, TILE_SIZE, 'rgba(255,255,255,0.12)')
     }
 
-    // tubos de conexão (visual) entre as salas — corredor orgânico, sem quina
+    // tubos de conexão — corredor orgânico em zigue-zague ligando as portas, sem quina reta
     ctx.strokeStyle = COR_PISO_SALA
     ctx.lineWidth = LARGURA_TUBO
     ctx.lineCap = 'round'
@@ -145,24 +146,36 @@ export default function NaveScene({ stateRef, onExplorarPlaneta }: Props) {
       ctx.stroke()
     }
 
-    // piso das salas — cápsulas arredondadas, não blocos
-    ctx.fillStyle = COR_PISO_SALA
+    // salas — cápsulas arredondadas de verdade, com a própria parede arredondada e um vão na porta
     for (const sala of SALAS) {
       const { x0, y0, x1, y1 } = sala.area
+      const sx0 = x0 - camera.x
+      const sy0 = y0 - camera.y
+      const w = x1 - x0
+      const h = y1 - y0
+
+      ctx.fillStyle = COR_PISO_SALA
       ctx.beginPath()
-      ctx.roundRect(x0 - camera.x, y0 - camera.y, x1 - x0, y1 - y0, RAIO_SALA)
+      ctx.roundRect(sx0, sy0, w, h, RAIO_SALA)
       ctx.fill()
+
+      ctx.strokeStyle = COR_PAREDE
+      ctx.lineWidth = ESPESSURA_PAREDE_VISUAL
+      ctx.beginPath()
+      ctx.roundRect(sx0, sy0, w, h, RAIO_SALA)
+      ctx.stroke()
+
+      // vão da porta — apaga um pedaço da parede desenhando por cima com a cor do piso
+      const { lado, centro, largura } = sala.porta
+      const folga = ESPESSURA_PAREDE_VISUAL
+      ctx.fillStyle = COR_PISO_SALA
+      if (lado === 'bottom') ctx.fillRect(centro - largura / 2 - camera.x, y1 - folga - camera.y, largura, folga * 2)
+      if (lado === 'top') ctx.fillRect(centro - largura / 2 - camera.x, y0 - folga - camera.y, largura, folga * 2)
+      if (lado === 'left') ctx.fillRect(x0 - folga - camera.x, centro - largura / 2 - camera.y, folga * 2, largura)
+      if (lado === 'right') ctx.fillRect(x1 - folga - camera.x, centro - largura / 2 - camera.y, folga * 2, largura)
     }
 
-    // paredes — segmentos com cantos levemente arredondados
-    ctx.fillStyle = '#4b5168'
-    for (const p of PAREDES) {
-      ctx.beginPath()
-      ctx.roundRect(p.x0 - camera.x, p.y0 - camera.y, p.x1 - p.x0, p.y1 - p.y0, 4)
-      ctx.fill()
-    }
-
-    // construções colocadas (inclui a Bancada) — só o ícone/cor, sem texto; detalhes ficam na UI
+    // construções colocadas — só o ícone/cor, sem texto; detalhes ficam na UI
     for (const inst of state.construcoes) {
       if (!inst.colocada || inst.posX === undefined || inst.posY === undefined) continue
       const d = construcaoPorId(inst.defId)
@@ -174,14 +187,6 @@ export default function NaveScene({ stateRef, onExplorarPlaneta }: Props) {
       ctx.roundRect(sx - 28, sy - 28, 56, 56, 10)
       ctx.fill()
     }
-
-    // cama do dormitório
-    const bx = CAMA.x - camera.x
-    const by = CAMA.y - camera.y
-    ctx.fillStyle = '#581c87'
-    ctx.beginPath()
-    ctx.roundRect(bx - 32, by - 18, 64, 36, 8)
-    ctx.fill()
 
     // saída da nave (porta/airlock) — é por onde se vai pro planeta
     const ex = SAIDA.x - camera.x
@@ -286,9 +291,9 @@ export default function NaveScene({ stateRef, onExplorarPlaneta }: Props) {
         e.preventDefault()
         abrirConstrucaoProximaRef.current()
       }
-      if (e.key === 'p' || e.key === 'P') {
+      if (e.key === 'r' || e.key === 'R') {
         e.preventDefault()
-        setPainelAberto((v) => !v)
+        repararRef.current()
       }
     }
     window.addEventListener('keydown', onKeyDown)
@@ -323,6 +328,11 @@ export default function NaveScene({ stateRef, onExplorarPlaneta }: Props) {
     setHud(cloneForHud(stateRef.current))
   }
 
+  const repararRef = useRef(reparar)
+  useEffect(() => {
+    repararRef.current = reparar
+  })
+
   function dormirAgora() {
     const resultado = dormir(stateRef.current)
     setHud(cloneForHud(stateRef.current))
@@ -339,6 +349,8 @@ export default function NaveScene({ stateRef, onExplorarPlaneta }: Props) {
     const proxima = construcaoColocadaProxima(hud)
     if (!proxima) return
     if (proxima.defId === BANCADA_FABRICACAO_ID) setBancadaAberta(true)
+    else if (proxima.defId === PAINEL_NAVE_ID) setPainelAberto(true)
+    else if (proxima.defId === CAMA_ID) dormirAgora()
     else setDetalheId(proxima.id)
   }
 
@@ -348,9 +360,12 @@ export default function NaveScene({ stateRef, onExplorarPlaneta }: Props) {
   })
 
   const construcaoProxima = construcaoColocadaProxima(hud)
-  const pertoDaCama = pertoDe(hud, CAMA)
-  const pertoDaSaida = pertoDe(hud, SAIDA)
+  const defProxima = construcaoProxima ? construcaoPorId(construcaoProxima.defId) : null
+  const pertoDaSaida = Math.hypot(hud.posicao.x - SAIDA.x, hud.posicao.y - SAIDA.y) < 55
   const detalheInst = detalheId ? instanciaPorId(hud, detalheId) : null
+
+  let rotuloAcaoProxima = defProxima ? `Abrir ${defProxima.nome} (F)` : ''
+  if (construcaoProxima?.defId === CAMA_ID) rotuloAcaoProxima = 'Dormir (F)'
 
   return (
     <div className="nave-scene">
@@ -389,9 +404,6 @@ export default function NaveScene({ stateRef, onExplorarPlaneta }: Props) {
             <button type="button" onClick={() => setInventarioAberto(true)}>
               Inventário (E)
             </button>
-            <button type="button" onClick={() => setPainelAberto(true)}>
-              Painel da Nave (P)
-            </button>
             {pertoDaSaida && (
               <button type="button" onClick={onExplorarPlaneta}>
                 Sair da nave
@@ -399,17 +411,12 @@ export default function NaveScene({ stateRef, onExplorarPlaneta }: Props) {
             )}
             {pertoDaAvaria(hud) && (
               <button type="button" onClick={reparar} disabled={!podeRepararCasco(hud)}>
-                Reparar rachadura (2 Peças)
+                Reparar rachadura (2 Peças) (R)
               </button>
             )}
             {construcaoProxima && (
               <button type="button" onClick={abrirConstrucaoProxima}>
-                Abrir {construcaoPorId(construcaoProxima.defId)?.nome} (F)
-              </button>
-            )}
-            {pertoDaCama && (
-              <button type="button" onClick={dormirAgora}>
-                Dormir
+                {rotuloAcaoProxima}
               </button>
             )}
           </>

@@ -41,37 +41,47 @@ export function drawEspacoExterior(
   }
 }
 
-/** casco visível por fora da nave, estilo "Among Us": silhueta arredondada com bicos de motor */
-export function drawCascoNave(ctx: CanvasRenderingContext2D, camera: Camera, mundo: Mundo) {
-  const x0 = mundo.x0 - camera.x
-  const y0 = mundo.y0 - camera.y
-  const w = mundo.x1 - mundo.x0
-  const h = mundo.y1 - mundo.y0
-  const raio = 46
+/** perfil do casco: de cima (nariz, estreito) até embaixo (cauda dos propulsores, afunila) */
+const PERFIL_CASCO = [
+  { y: 0, meiaLargura: 200 },
+  { y: 150, meiaLargura: 220 },
+  { y: 280, meiaLargura: 600 },
+  { y: 340, meiaLargura: 680 },
+  { y: 1150, meiaLargura: 680 },
+  { y: 1200, meiaLargura: 140 },
+]
 
-  ctx.save()
+function caminhoCasco(ctx: CanvasRenderingContext2D, mundo: Mundo, camera: Camera, encolher: number) {
+  const cx = (mundo.x0 + mundo.x1) / 2 - camera.x
+  const perfil = PERFIL_CASCO
   ctx.beginPath()
-  ctx.roundRect(x0, y0, w, h, raio)
+  ctx.moveTo(cx + perfil[0].meiaLargura - encolher, perfil[0].y - camera.y)
+  for (let i = 1; i < perfil.length; i++) {
+    ctx.lineTo(cx + perfil[i].meiaLargura - encolher, perfil[i].y - camera.y)
+  }
+  for (let i = perfil.length - 1; i >= 0; i--) {
+    ctx.lineTo(cx - perfil[i].meiaLargura + encolher, perfil[i].y - camera.y)
+  }
+  ctx.closePath()
+}
+
+/** casco visível por fora da nave — nariz estreito na frente, afunila atrás nos propulsores */
+export function drawCascoNave(ctx: CanvasRenderingContext2D, camera: Camera, mundo: Mundo) {
+  ctx.save()
+  ctx.lineJoin = 'round'
+  caminhoCasco(ctx, mundo, camera, 0)
   ctx.fillStyle = '#3a3f55'
   ctx.fill()
   ctx.strokeStyle = '#555c78'
   ctx.lineWidth = 8
   ctx.stroke()
-
-  // bicos de motor na lateral esquerda
-  const nubH = 70
-  const nubW = 26
-  ctx.fillStyle = '#2e3146'
-  ctx.fillRect(x0 - nubW, y0 + h * 0.3 - nubH / 2, nubW + 4, nubH)
-  ctx.fillRect(x0 - nubW, y0 + h * 0.7 - nubH / 2, nubW + 4, nubH)
   ctx.restore()
 
   // piso interno (recorte levemente menor que o casco)
   ctx.save()
-  ctx.beginPath()
-  ctx.roundRect(x0 + 10, y0 + 10, w - 20, h - 20, raio - 10)
+  caminhoCasco(ctx, mundo, camera, 10)
   ctx.clip()
   ctx.fillStyle = '#0b0d14'
-  ctx.fillRect(x0, y0, w, h)
+  ctx.fillRect(-2000, -2000, 6000, 6000)
   ctx.restore()
 }

@@ -32,6 +32,8 @@ export interface ConstrucaoDef {
 
 export const CAPACIDADE_BUFFER_PADRAO = 10
 export const BANCADA_FABRICACAO_ID = 'bancadaFabricacao'
+export const PAINEL_NAVE_ID = 'painelNave'
+export const CAMA_ID = 'cama'
 
 export const CONSTRUCOES: ConstrucaoDef[] = [
   {
@@ -39,6 +41,20 @@ export const CONSTRUCOES: ConstrucaoDef[] = [
     nome: 'Bancada de Fabricação',
     niveis: [{}],
     cor: '#92400e',
+    inicial: true,
+  },
+  {
+    id: PAINEL_NAVE_ID,
+    nome: 'Painel da Nave',
+    niveis: [{}],
+    cor: '#2563eb',
+    inicial: true,
+  },
+  {
+    id: CAMA_ID,
+    nome: 'Cama',
+    niveis: [{}],
+    cor: '#581c87',
     inicial: true,
   },
   // Suporte de Vida

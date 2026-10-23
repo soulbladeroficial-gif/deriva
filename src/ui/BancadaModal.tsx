@@ -54,7 +54,7 @@ export default function BancadaModal({ hud, stateRef, onChange, onClose }: Props
                 >
                   <span className="item-icon">{item.slice(0, 2).toUpperCase()}</span>
                   <span className="item-nome">{item}</span>
-                  <span className="item-qtd">{qtd.toFixed(1)}</span>
+                  <span className="item-qtd">{Math.round(qtd)}</span>
                 </div>
               ))}
             </div>

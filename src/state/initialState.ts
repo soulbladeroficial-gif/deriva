@@ -1,5 +1,5 @@
 import type { GameState } from '../engine/types'
-import { BANCADA_FABRICACAO_ID } from '../content/construcoesNave'
+import { BANCADA_FABRICACAO_ID, PAINEL_NAVE_ID, CAMA_ID } from '../content/construcoesNave'
 
 export function createInitialState(): GameState {
   return {
@@ -50,11 +50,29 @@ export function createInitialState(): GameState {
         defId: BANCADA_FABRICACAO_ID,
         nivel: 1,
         colocada: true,
-        posX: 1056,
-        posY: 928,
+        posX: 224,
+        posY: 736,
+        bufferEntrada: 0,
+      },
+      {
+        id: PAINEL_NAVE_ID,
+        defId: PAINEL_NAVE_ID,
+        nivel: 1,
+        colocada: true,
+        posX: 704,
+        posY: 160,
+        bufferEntrada: 0,
+      },
+      {
+        id: CAMA_ID,
+        defId: CAMA_ID,
+        nivel: 1,
+        colocada: true,
+        posX: 224,
+        posY: 1024,
         bufferEntrada: 0,
       },
     ],
-    posicao: { x: 700, y: 360 },
+    posicao: { x: 720, y: 320 },
   }
 }
