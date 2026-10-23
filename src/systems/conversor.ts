@@ -60,27 +60,58 @@ export function updateConversor(
   }
 }
 
-/** texto curto tipo "-0.05 Água Pura/s  -3W  +2 O2/s" pra mostrar o que a construção faz de verdade */
-export function descricaoConversor(spec: ConversorSpec, nivel: number): string {
-  const partes: string[] = []
-  if (spec.consomeItem) partes.push(`-${(spec.consomeItem.taxa * nivel).toFixed(2)} ${spec.consomeItem.item}/s`)
-  if (spec.produzItem) partes.push(`+${(spec.produzItem.taxa * nivel).toFixed(2)} ${spec.produzItem.item}/s`)
-  if (spec.produzItens) {
-    for (const s of spec.produzItens) partes.push(`+${(s.taxa * nivel).toFixed(2)} ${s.item}/s`)
-  }
-  if (spec.consomeEnergia) partes.push(`-${(spec.consomeEnergia * nivel).toFixed(1)}W`)
-  if (spec.produzEnergia) partes.push(`+${(spec.produzEnergia * nivel).toFixed(1)}W`)
-  if (spec.produzO2Nave) partes.push(`+${(spec.produzO2Nave * nivel).toFixed(1)} O2/s`)
-  if (spec.reduzConsumoPercent) partes.push(`-${(spec.reduzConsumoPercent * nivel * 100).toFixed(0)}% consumo`)
-  return partes.join('  ')
+/** um efeito do conversor, pronto pra virar um "chip" visual na UI (sem texto técnico cru) */
+export interface Efeito {
+  /** sigla curta pra servir de selo provisório — ícone de verdade entra na parte de design */
+  icone: string
+  cor: string
+  rotulo: string
+  valor: string
 }
 
-/** texto tipo "Água Pura: 3.2/10" mostrando o estoque interno da construção */
-export function descricaoBuffer(
-  spec: ConversorSpec,
-  bufferEntrada: number,
-  capacidade: number,
-): string | null {
-  if (!spec.consomeItem) return null
-  return `${spec.consomeItem.item}: ${bufferEntrada.toFixed(1)}/${capacidade}`
+const POSITIVO = '#4ade80'
+const NEGATIVO = '#f87171'
+
+/** quebra o conversor em efeitos estruturados (consumo, produção, energia, O2...) pra UI montar chips */
+export function efeitosConversor(spec: ConversorSpec, nivel: number): Efeito[] {
+  const efeitos: Efeito[] = []
+  if (spec.consomeItem) {
+    efeitos.push({
+      icone: spec.consomeItem.item.slice(0, 2).toUpperCase(),
+      cor: NEGATIVO,
+      rotulo: spec.consomeItem.item,
+      valor: `-${(spec.consomeItem.taxa * nivel).toFixed(2)}/s`,
+    })
+  }
+  if (spec.produzItem) {
+    efeitos.push({
+      icone: spec.produzItem.item.slice(0, 2).toUpperCase(),
+      cor: POSITIVO,
+      rotulo: spec.produzItem.item,
+      valor: `+${(spec.produzItem.taxa * nivel).toFixed(2)}/s`,
+    })
+  }
+  if (spec.produzItens) {
+    for (const s of spec.produzItens) {
+      efeitos.push({
+        icone: s.item.slice(0, 2).toUpperCase(),
+        cor: POSITIVO,
+        rotulo: s.item,
+        valor: `+${(s.taxa * nivel).toFixed(2)}/s`,
+      })
+    }
+  }
+  if (spec.consomeEnergia) {
+    efeitos.push({ icone: '⚡', cor: NEGATIVO, rotulo: 'Energia', valor: `-${(spec.consomeEnergia * nivel).toFixed(1)}W` })
+  }
+  if (spec.produzEnergia) {
+    efeitos.push({ icone: '⚡', cor: POSITIVO, rotulo: 'Energia', valor: `+${(spec.produzEnergia * nivel).toFixed(1)}W` })
+  }
+  if (spec.produzO2Nave) {
+    efeitos.push({ icone: 'O2', cor: POSITIVO, rotulo: 'Oxigênio', valor: `+${(spec.produzO2Nave * nivel).toFixed(1)}/s` })
+  }
+  if (spec.reduzConsumoPercent) {
+    efeitos.push({ icone: '%', cor: '#c084fc', rotulo: 'Consumo', valor: `-${(spec.reduzConsumoPercent * nivel * 100).toFixed(0)}%` })
+  }
+  return efeitos
 }

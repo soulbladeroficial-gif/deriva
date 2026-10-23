@@ -1,4 +1,5 @@
 import type { GameState } from '../engine/types'
+import { BANCADA_FABRICACAO_ID } from '../content/construcoesNave'
 
 export function createInitialState(): GameState {
   return {
@@ -42,7 +43,9 @@ export function createInitialState(): GameState {
       'Carapaça Quitinosa': 5,
       'Escama Blindada': 5,
     },
-    construcoes: {},
-    posicao: { x: 400, y: 260 },
+    construcoes: {
+      [BANCADA_FABRICACAO_ID]: { nivel: 1, colocada: true, posX: 1056, posY: 928, bufferEntrada: 0 },
+    },
+    posicao: { x: 700, y: 360 },
   }
 }

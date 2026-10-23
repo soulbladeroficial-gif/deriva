@@ -10,34 +10,37 @@ import { updateMovimento, type Bounds } from '../systems/movimento'
 import {
   construcaoColocadaProxima,
   construcaoPorId,
-  descricaoBufferDef,
+  hitboxesConstrucoes,
   pertoDe,
   podeColocarEm,
   colocarPendente,
   updateConstrucoesNave,
 } from '../systems/construcoesNave'
-import { descricaoConversor } from '../systems/conversor'
+import { BANCADA_FABRICACAO_ID } from '../content/construcoesNave'
 import { updatePanes, podeRepararCasco, repararCasco } from '../systems/casco'
 import { dormir } from '../systems/dormitorio'
-import { PAREDES, CAMA, BANCADA_FABRICACAO } from '../content/salasNave'
+import { PAREDES, CAMA } from '../content/salasNave'
 import { cloneForHud } from '../state/cloneForHud'
 import InventarioModal from '../ui/InventarioModal'
 import ConstrucaoDetalheModal from '../ui/ConstrucaoDetalheModal'
+import BancadaModal from '../ui/BancadaModal'
 import type { GameState } from '../engine/types'
 import type { InputState } from '../engine/input'
 import './NaveScene.css'
 
 const MARGEM_CASCO = 40
-const MUNDO = { x0: 0, y0: 0, x1: 1400, y1: 820 }
+const MUNDO = { x0: 0, y0: 0, x1: 1400, y1: 1120 }
 const BOUNDS: Bounds = {
   x0: MUNDO.x0 + MARGEM_CASCO,
   y0: MUNDO.y0 + MARGEM_CASCO,
   x1: MUNDO.x1 - MARGEM_CASCO,
   y1: MUNDO.y1 - MARGEM_CASCO,
 }
-const SPAWN_NAVE = { x: 700, y: 400 }
+const SPAWN_NAVE = { x: 700, y: 360 }
 const TILE_SIZE = 32
 const PLAYER_RAIO = 12
+/** quanto mais perto a câmera fica — não dá mais pra ver a nave toda de uma vez */
+const ZOOM = 1.7
 
 interface Props {
   stateRef: MutableRefObject<GameState>
@@ -50,6 +53,7 @@ export default function NaveScene({ stateRef, onExplorarPlaneta }: Props) {
   const [avisoSono, setAvisoSono] = useState<string | null>(null)
   const [inventarioAberto, setInventarioAberto] = useState(false)
   const [detalheId, setDetalheId] = useState<string | null>(null)
+  const [bancadaAberta, setBancadaAberta] = useState(false)
   const [posicionando, setPosicionando] = useState<string | null>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const facingRef = useRef<{ dx: number; dy: number }>({ dx: 0, dy: 1 })
@@ -87,14 +91,14 @@ export default function NaveScene({ stateRef, onExplorarPlaneta }: Props) {
     state.nave.energiaConsumida = 0
     updateReatorPrincipal(state)
     updateSobrevivencia(state, dt)
-    updateMovimento(state, input, dt, BOUNDS, PAREDES, PLAYER_RAIO)
+    updateMovimento(state, input, dt, BOUNDS, [...PAREDES, ...hitboxesConstrucoes(state)], PLAYER_RAIO)
     updateConstrucoesNave(state, dt)
     updatePanes(state, dt)
   }, [])
 
   function posicaoDoMouseNoMundo(camera: { x: number; y: number }) {
-    const worldX = mouseRef.current.x + camera.x
-    const worldY = mouseRef.current.y + camera.y
+    const worldX = mouseRef.current.x / ZOOM + camera.x
+    const worldY = mouseRef.current.y / ZOOM + camera.y
     return {
       x: Math.round(worldX / TILE_SIZE) * TILE_SIZE,
       y: Math.round(worldY / TILE_SIZE) * TILE_SIZE,
@@ -107,9 +111,12 @@ export default function NaveScene({ stateRef, onExplorarPlaneta }: Props) {
     const ctx = canvas.getContext('2d')
     if (!ctx) return
 
-    const viewW = canvas.width
-    const viewH = canvas.height
+    const viewW = canvas.width / ZOOM
+    const viewH = canvas.height / ZOOM
     const camera = computeCamera(state.posicao.x, state.posicao.y, viewW, viewH)
+
+    ctx.save()
+    ctx.scale(ZOOM, ZOOM)
 
     drawEspacoExterior(ctx, camera, viewW, viewH)
     drawCascoNave(ctx, camera, MUNDO)
@@ -124,6 +131,7 @@ export default function NaveScene({ stateRef, onExplorarPlaneta }: Props) {
       ctx.fillRect(p.x0 - camera.x, p.y0 - camera.y, p.x1 - p.x0, p.y1 - p.y0)
     }
 
+    // construções colocadas (inclui a Bancada) — só o ícone/cor, sem texto; detalhes ficam na UI
     for (const defId of Object.keys(state.construcoes)) {
       const inst = state.construcoes[defId]
       if (!inst?.colocada || inst.posX === undefined || inst.posY === undefined) continue
@@ -133,24 +141,6 @@ export default function NaveScene({ stateRef, onExplorarPlaneta }: Props) {
       const sy = inst.posY - camera.y
       ctx.fillStyle = d.cor
       ctx.fillRect(sx - 28, sy - 28, 56, 56)
-      ctx.fillStyle = '#e5e7eb'
-      ctx.font = '12px sans-serif'
-      ctx.textAlign = 'center'
-      ctx.fillText(`${d.nome} Nv${inst.nivel}`, sx, sy + 44)
-      if (d.conversor) {
-        const texto = descricaoConversor(d.conversor, inst.nivel)
-        if (texto) {
-          ctx.fillStyle = '#9ca3af'
-          ctx.font = '10px sans-serif'
-          ctx.fillText(texto, sx, sy + 58)
-        }
-      }
-      const bufferTexto = descricaoBufferDef(d, inst)
-      if (bufferTexto) {
-        ctx.fillStyle = '#7dd3fc'
-        ctx.font = '10px sans-serif'
-        ctx.fillText(bufferTexto, sx, sy + 70)
-      }
     }
 
     // cama do dormitório
@@ -158,20 +148,6 @@ export default function NaveScene({ stateRef, onExplorarPlaneta }: Props) {
     const by = CAMA.y - camera.y
     ctx.fillStyle = '#581c87'
     ctx.fillRect(bx - 32, by - 18, 64, 36)
-    ctx.fillStyle = '#e5e7eb'
-    ctx.font = '12px sans-serif'
-    ctx.textAlign = 'center'
-    ctx.fillText('Cama', bx, by + 34)
-
-    // bancada de fabricação
-    const kx = BANCADA_FABRICACAO.x - camera.x
-    const ky = BANCADA_FABRICACAO.y - camera.y
-    ctx.fillStyle = '#92400e'
-    ctx.fillRect(kx - 34, ky - 22, 68, 44)
-    ctx.fillStyle = '#e5e7eb'
-    ctx.font = '12px sans-serif'
-    ctx.textAlign = 'center'
-    ctx.fillText('Bancada', kx, ky + 38)
 
     // ghost de posicionamento — segue o mouse, ajustado na malha
     if (posicionandoRef.current) {
@@ -190,10 +166,11 @@ export default function NaveScene({ stateRef, onExplorarPlaneta }: Props) {
         ctx.strokeRect(sx - 28, sy - 28, 56, 56)
         ctx.fillStyle = '#f3f4f6'
         ctx.font = 'bold 13px sans-serif'
+        ctx.textAlign = 'center'
         ctx.fillText(
           valido ? `Clique pra posicionar ${def.nome}` : 'Posição inválida',
           viewW / 2,
-          40,
+          30,
         )
       }
     }
@@ -216,6 +193,7 @@ export default function NaveScene({ stateRef, onExplorarPlaneta }: Props) {
     ctx.fill()
 
     ctx.textAlign = 'left'
+    ctx.restore()
   }, [])
 
   useGameLoop(stateRef, update, render)
@@ -231,7 +209,17 @@ export default function NaveScene({ stateRef, onExplorarPlaneta }: Props) {
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
-      if (e.key === 'Escape') setPosicionando(null)
+      if (e.key === 'Escape') {
+        setPosicionando(null)
+        setInventarioAberto(false)
+        setDetalheId(null)
+        setBancadaAberta(false)
+        return
+      }
+      if ((e.key === 'i' || e.key === 'I') && !posicionandoRef.current) {
+        e.preventDefault()
+        setInventarioAberto((v) => !v)
+      }
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
@@ -246,7 +234,12 @@ export default function NaveScene({ stateRef, onExplorarPlaneta }: Props) {
     if (!posicionandoRef.current) return
     const canvas = canvasRef.current
     if (!canvas) return
-    const camera = computeCamera(stateRef.current.posicao.x, stateRef.current.posicao.y, canvas.width, canvas.height)
+    const camera = computeCamera(
+      stateRef.current.posicao.x,
+      stateRef.current.posicao.y,
+      canvas.width / ZOOM,
+      canvas.height / ZOOM,
+    )
     const alvo = posicaoDoMouseNoMundo(camera)
     if (!podeColocarEm(stateRef.current, alvo)) return
     colocarPendente(stateRef.current, posicionandoRef.current, alvo)
@@ -269,6 +262,12 @@ export default function NaveScene({ stateRef, onExplorarPlaneta }: Props) {
         : `Dormiu ~${minutos} min sem imprevistos.`,
     )
     setTimeout(() => setAvisoSono(null), 4000)
+  }
+
+  function abrirConstrucaoProxima() {
+    if (!construcaoProxima) return
+    if (construcaoProxima.id === BANCADA_FABRICACAO_ID) setBancadaAberta(true)
+    else setDetalheId(construcaoProxima.id)
   }
 
   const construcaoProxima = construcaoColocadaProxima(hud)
@@ -328,7 +327,7 @@ export default function NaveScene({ stateRef, onExplorarPlaneta }: Props) {
         ) : (
           <>
             <button type="button" onClick={() => setInventarioAberto(true)}>
-              Inventário
+              Inventário (I)
             </button>
             <button type="button" onClick={onExplorarPlaneta}>
               Explorar planeta próximo (Rochoso Árido)
@@ -337,7 +336,7 @@ export default function NaveScene({ stateRef, onExplorarPlaneta }: Props) {
               Reparar Casco (2 Peças)
             </button>
             {construcaoProxima && (
-              <button type="button" onClick={() => setDetalheId(construcaoProxima.id)}>
+              <button type="button" onClick={abrirConstrucaoProxima}>
                 Abrir {construcaoProxima.nome}
               </button>
             )}
@@ -371,6 +370,15 @@ export default function NaveScene({ stateRef, onExplorarPlaneta }: Props) {
           onChange={() => setHud(cloneForHud(stateRef.current))}
           onClose={() => setDetalheId(null)}
           onMover={(defId) => setPosicionando(defId)}
+        />
+      )}
+
+      {bancadaAberta && (
+        <BancadaModal
+          hud={hud}
+          stateRef={stateRef}
+          onChange={() => setHud(cloneForHud(stateRef.current))}
+          onClose={() => setBancadaAberta(false)}
         />
       )}
     </div>

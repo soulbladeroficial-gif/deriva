@@ -1,6 +1,6 @@
 import type { MutableRefObject } from 'react'
 import type { GameState } from '../engine/types'
-import type { ConstrucaoDef } from '../content/construcoesNave'
+import type { ConstrucaoDef, NivelCusto } from '../content/construcoesNave'
 import {
   bancadaConstruida,
   craftar,
@@ -12,7 +12,8 @@ import {
   removerColocada,
   uparConstrucao,
 } from '../systems/construcoesNave'
-import { descricaoConversor } from '../systems/conversor'
+import { efeitosConversor } from '../systems/conversor'
+import Chip from './Chip'
 import './ConstrucaoDetalheModal.css'
 
 interface Props {
@@ -22,6 +23,16 @@ interface Props {
   onChange: () => void
   onClose: () => void
   onMover: (defId: string) => void
+}
+
+function ChipsCusto({ custo }: { custo: NivelCusto }) {
+  return (
+    <div className="detalhe-chips">
+      {Object.entries(custo).map(([item, qtd]) => (
+        <Chip key={item} icone={item.slice(0, 2).toUpperCase()} cor="#9ca3af" rotulo={item} valor={String(qtd)} />
+      ))}
+    </div>
+  )
 }
 
 export default function ConstrucaoDetalheModal({ def, hud, stateRef, onChange, onClose, onMover }: Props) {
@@ -60,6 +71,8 @@ export default function ConstrucaoDetalheModal({ def, hud, stateRef, onChange, o
   const noNivelMax = inst.nivel >= def.niveis.length
   const custoProximo = !noNivelMax ? def.niveis[inst.nivel] : null
   const precisaBancada = !def.bancada && !bancadaConstruida(hud)
+  const efeitosAgora = def.conversor ? efeitosConversor(def.conversor, inst.nivel) : []
+  const efeitosProximo = def.conversor ? efeitosConversor(def.conversor, inst.nivel + 1) : []
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -73,8 +86,12 @@ export default function ConstrucaoDetalheModal({ def, hud, stateRef, onChange, o
           </button>
         </div>
 
-        {def.conversor && (
-          <p className="detalhe-funcionamento">{descricaoConversor(def.conversor, inst.nivel)}</p>
+        {efeitosAgora.length > 0 && (
+          <div className="detalhe-chips">
+            {efeitosAgora.map((ef) => (
+              <Chip key={ef.rotulo} icone={ef.icone} cor={ef.cor} rotulo={ef.rotulo} valor={ef.valor} />
+            ))}
+          </div>
         )}
 
         {bufferTexto && (
@@ -90,9 +107,15 @@ export default function ConstrucaoDetalheModal({ def, hud, stateRef, onChange, o
         {def.craft && (
           <div className="detalhe-secao">
             <span className="detalhe-secao-titulo">Fabricação</span>
-            <span>
-              Gasta {def.craft.custoBuffer} do estoque → {def.craft.produzQtd} {def.craft.produzItem}
-            </span>
+            <div className="detalhe-chips">
+              <Chip
+                icone={def.craft.produzItem.slice(0, 2).toUpperCase()}
+                cor="#4ade80"
+                rotulo={def.craft.produzItem}
+                valor={`+${def.craft.produzQtd}`}
+              />
+              <Chip icone="—" cor="#9ca3af" rotulo="custo" valor={`${def.craft.custoBuffer} do estoque`} />
+            </div>
             <button type="button" onClick={fazerCraft} disabled={!podeCraftar(hud, def)}>
               Criar {def.craft.produzItem}
             </button>
@@ -105,19 +128,27 @@ export default function ConstrucaoDetalheModal({ def, hud, stateRef, onChange, o
             <span>Nível máximo</span>
           ) : (
             <>
-              {def.conversor && (
+              {efeitosAgora.length > 0 && (
                 <div className="detalhe-comparacao">
-                  <span>Agora: {descricaoConversor(def.conversor, inst.nivel) || '—'}</span>
-                  <span>Próximo: {descricaoConversor(def.conversor, inst.nivel + 1) || '—'}</span>
+                  <div>
+                    <span className="detalhe-comparacao-titulo">Agora</span>
+                    <div className="detalhe-chips">
+                      {efeitosAgora.map((ef) => (
+                        <Chip key={ef.rotulo} icone={ef.icone} cor={ef.cor} rotulo={ef.rotulo} valor={ef.valor} />
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <span className="detalhe-comparacao-titulo">Próximo</span>
+                    <div className="detalhe-chips">
+                      {efeitosProximo.map((ef) => (
+                        <Chip key={ef.rotulo} icone={ef.icone} cor={ef.cor} rotulo={ef.rotulo} valor={ef.valor} />
+                      ))}
+                    </div>
+                  </div>
                 </div>
               )}
-              <span className="detalhe-custo">
-                Custa:{' '}
-                {custoProximo &&
-                  Object.entries(custoProximo)
-                    .map(([item, qtd]) => `${qtd} ${item}`)
-                    .join(' + ')}
-              </span>
+              {custoProximo && <ChipsCusto custo={custoProximo} />}
               {precisaBancada && <span className="detalhe-aviso">Precisa de uma Bancada de Upgrade instalada</span>}
               <button type="button" onClick={fazerUpgrade} disabled={!podeUpar(hud, def)}>
                 Melhorar

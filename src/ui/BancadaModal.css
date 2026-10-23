@@ -1,0 +1,196 @@
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+}
+
+.bancada-modal {
+  width: min(900px, 94vw);
+  max-height: 85vh;
+  overflow-y: auto;
+  background: #0d0e16;
+  border: 1px solid #2e303a;
+  border-radius: 12px;
+  padding: 20px;
+  color: #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.bancada-topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.bancada-topo h3 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.bancada-fechar {
+  font: inherit;
+  font-size: 20px;
+  line-height: 1;
+  background: none;
+  border: none;
+  color: #9ca3af;
+  cursor: pointer;
+  padding: 4px 8px;
+}
+
+.bancada-corpo {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.bancada-coluna {
+  flex: 1;
+  min-width: 280px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.bancada-coluna-titulo {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #6b7280;
+}
+
+.bancada-dica {
+  margin: 0;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.bancada-inventario {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.bancada-inventario .item-slot {
+  font: inherit;
+  width: 84px;
+  height: 84px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  border-radius: 10px;
+  border: 1px solid #2e303a;
+  background: #11131c;
+  color: #e5e7eb;
+  cursor: grab;
+  padding: 6px;
+}
+
+.bancada-inventario .item-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: #2e303a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 600;
+  color: #c084fc;
+}
+
+.bancada-inventario .item-nome {
+  font-size: 10px;
+  text-align: center;
+  line-height: 1.2;
+  color: #9ca3af;
+}
+
+.bancada-inventario .item-qtd {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.bancada-receitas {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.receita {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid #2e303a;
+  border-radius: 10px;
+  background: #11131c;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.receita.arrastando {
+  border-color: rgba(74, 222, 128, 0.7);
+  background: rgba(74, 222, 128, 0.08);
+}
+
+.receita-topo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.receita-cor {
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.receita-nome {
+  font-size: 13px;
+  flex: 1;
+}
+
+.receita-status {
+  font-size: 11px;
+  color: #f87171;
+}
+
+.receita-status.pronta {
+  color: #4ade80;
+}
+
+.receita-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.receita button {
+  font: inherit;
+  font-size: 12px;
+  padding: 8px 14px;
+  border-radius: 6px;
+  border: none;
+  background: rgba(192, 132, 252, 0.2);
+  color: #e5e7eb;
+  cursor: pointer;
+  align-self: flex-start;
+}
+
+.receita button:hover:not(:disabled) {
+  background: rgba(192, 132, 252, 0.35);
+}
+
+.receita button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}

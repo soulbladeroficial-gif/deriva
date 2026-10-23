@@ -56,10 +56,17 @@
   padding: 4px 8px;
 }
 
-.detalhe-funcionamento {
-  margin: 0;
-  font-size: 12px;
-  color: #9ca3af;
+.detalhe-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.detalhe-comparacao-titulo {
+  display: block;
+  font-size: 11px;
+  color: #6b7280;
+  margin-bottom: 4px;
 }
 
 .detalhe-secao {
@@ -85,14 +92,8 @@
 
 .detalhe-comparacao {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
-  font-size: 12px;
-}
-
-.detalhe-custo {
-  font-size: 12px;
-  color: #facc15;
+  gap: 16px;
+  flex-wrap: wrap;
 }
 
 .detalhe-aviso {

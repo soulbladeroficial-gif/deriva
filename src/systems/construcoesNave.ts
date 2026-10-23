@@ -2,15 +2,18 @@ import type { GameState } from '../engine/types'
 import {
   CONSTRUCOES,
   CAPACIDADE_BUFFER_PADRAO,
+  BANCADA_FABRICACAO_ID,
   type ConstrucaoDef,
   type NivelCusto,
 } from '../content/construcoesNave'
-import { salaEm, BANCADA_FABRICACAO } from '../content/salasNave'
+import { salaEm, type Retangulo } from '../content/salasNave'
 import { updateConversor } from './conversor'
 
 export const RAIO_INTERACAO = 55
 /** distância mínima entre centros de duas construções colocadas livremente */
 export const RAIO_COLISAO_CONSTRUCAO = 70
+/** metade do lado da hitbox de colisão de uma construção colocada */
+export const RAIO_HITBOX_CONSTRUCAO = 26
 
 export function pertoDe(state: GameState, pos: { x: number; y: number }, raio = RAIO_INTERACAO) {
   return Math.hypot(state.posicao.x - pos.x, state.posicao.y - pos.y) < raio
@@ -47,9 +50,16 @@ export function pendentes(state: GameState): ConstrucaoDef[] {
   })
 }
 
-/** só dá pra criar construções perto da bancada de fabricação da nave */
+/** construções que aparecem no catálogo de "Criar" da bancada (exclui as que já vêm fixas na nave) */
+export function catalogoConstruivel(): ConstrucaoDef[] {
+  return CONSTRUCOES.filter((def) => !def.inicial)
+}
+
+/** só dá pra criar construções perto da bancada de fabricação — ela é uma construção como as outras */
 export function pertoDaBancada(state: GameState) {
-  return pertoDe(state, BANCADA_FABRICACAO)
+  const inst = state.construcoes[BANCADA_FABRICACAO_ID]
+  if (!inst?.colocada || inst.posX === undefined || inst.posY === undefined) return false
+  return pertoDe(state, { x: inst.posX, y: inst.posY })
 }
 
 export function podeCriar(state: GameState, def: ConstrucaoDef) {
@@ -147,6 +157,22 @@ export function podeColocarEm(state: GameState, pos: { x: number; y: number }) {
   if (!salaEm(pos)) return false
   if (construcaoNaPosicao(state, pos)) return false
   return true
+}
+
+/** retângulos de colisão de todas as construções colocadas — o jogador não anda por cima delas */
+export function hitboxesConstrucoes(state: GameState): Retangulo[] {
+  const caixas: Retangulo[] = []
+  for (const defId of Object.keys(state.construcoes)) {
+    const inst = state.construcoes[defId]
+    if (!inst?.colocada || inst.posX === undefined || inst.posY === undefined) continue
+    caixas.push({
+      x0: inst.posX - RAIO_HITBOX_CONSTRUCAO,
+      y0: inst.posY - RAIO_HITBOX_CONSTRUCAO,
+      x1: inst.posX + RAIO_HITBOX_CONSTRUCAO,
+      y1: inst.posY + RAIO_HITBOX_CONSTRUCAO,
+    })
+  }
+  return caixas
 }
 
 export function construcaoColocadaProxima(state: GameState): ConstrucaoDef | null {

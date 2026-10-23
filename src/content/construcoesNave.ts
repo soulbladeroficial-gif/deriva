@@ -26,11 +26,21 @@ export interface ConstrucaoDef {
   insumo?: { item: string }
   /** receita de fabricação sob demanda (ex: Oficina: deposita Ferro-Níquel, clica "Criar Peças") */
   craft?: CraftRecipe
+  /** já vem colocada na nave desde o início, não entra no catálogo de "Criar" (caso da Bancada de Fabricação) */
+  inicial?: boolean
 }
 
 export const CAPACIDADE_BUFFER_PADRAO = 10
+export const BANCADA_FABRICACAO_ID = 'bancadaFabricacao'
 
 export const CONSTRUCOES: ConstrucaoDef[] = [
+  {
+    id: BANCADA_FABRICACAO_ID,
+    nome: 'Bancada de Fabricação',
+    niveis: [{}],
+    cor: '#92400e',
+    inicial: true,
+  },
   // Suporte de Vida
   {
     id: 'eletrolisador',

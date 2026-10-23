@@ -26,43 +26,45 @@ export interface Retangulo {
 export const MARGEM_PAREDE = 44
 export const ESPESSURA_PAREDE = 10
 
+/**
+ * Layout em 3 andares, simétrico no eixo vertical (x=700): Energia sozinha no topo,
+ * no centro; Navegação/Suporte de Vida espelhadas no meio; Dormitório/Fabricação
+ * espelhadas embaixo. Portas largas (220px) pra nunca ficar sem achar a saída.
+ */
 export const SALAS: SalaDef[] = [
-  {
-    id: 'navegacao',
-    nome: 'Navegação',
-    area: { x0: 40, y0: 40, x1: 420, y1: 380 },
-    porta: { lado: 'right', centro: 210, largura: 140 },
-  },
   {
     id: 'energia',
     nome: 'Energia',
-    area: { x0: 460, y0: 40, x1: 900, y1: 380 },
-    porta: { lado: 'bottom', centro: 680, largura: 140 },
+    area: { x0: 520, y0: 40, x1: 880, y1: 320 },
+    porta: { lado: 'bottom', centro: 700, largura: 220 },
+  },
+  {
+    id: 'navegacao',
+    nome: 'Navegação',
+    area: { x0: 40, y0: 420, x1: 460, y1: 700 },
+    porta: { lado: 'right', centro: 560, largura: 220 },
   },
   {
     id: 'suporteVida',
     nome: 'Suporte de Vida',
-    area: { x0: 940, y0: 40, x1: 1380, y1: 380 },
-    porta: { lado: 'left', centro: 210, largura: 140 },
+    area: { x0: 940, y0: 420, x1: 1360, y1: 700 },
+    porta: { lado: 'left', centro: 560, largura: 220 },
   },
   {
     id: 'dormitorio',
     nome: 'Dormitório',
-    area: { x0: 40, y0: 420, x1: 420, y1: 760 },
-    porta: { lado: 'right', centro: 590, largura: 140 },
+    area: { x0: 40, y0: 800, x1: 460, y1: 1080 },
+    porta: { lado: 'right', centro: 940, largura: 220 },
   },
   {
     id: 'fabricacao',
     nome: 'Fabricação',
-    area: { x0: 460, y0: 420, x1: 900, y1: 760 },
-    porta: { lado: 'top', centro: 680, largura: 140 },
+    area: { x0: 940, y0: 800, x1: 1360, y1: 1080 },
+    porta: { lado: 'left', centro: 940, largura: 220 },
   },
 ]
 
-export const CAMA = { x: 230, y: 590 }
-
-/** bancada fixa da nave (não é construída) — é onde o jogador cria construções a partir de materiais */
-export const BANCADA_FABRICACAO = { x: 560, y: 480 }
+export const CAMA = { x: 230, y: 950 }
 
 export function salaPorId(id: string) {
   return SALAS.find((s) => s.id === id)
