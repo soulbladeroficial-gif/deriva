@@ -11,6 +11,7 @@ export function createInitialState(): GameState {
       oxigenioMax: 1000,
       casco: 100,
       cascoMax: 100,
+      paneLocal: null,
     },
     jogador: {
       fome: 80,
@@ -43,9 +44,17 @@ export function createInitialState(): GameState {
       'Carapaça Quitinosa': 5,
       'Escama Blindada': 5,
     },
-    construcoes: {
-      [BANCADA_FABRICACAO_ID]: { nivel: 1, colocada: true, posX: 1056, posY: 928, bufferEntrada: 0 },
-    },
+    construcoes: [
+      {
+        id: BANCADA_FABRICACAO_ID,
+        defId: BANCADA_FABRICACAO_ID,
+        nivel: 1,
+        colocada: true,
+        posX: 1056,
+        posY: 928,
+        bufferEntrada: 0,
+      },
+    ],
     posicao: { x: 700, y: 360 },
   }
 }

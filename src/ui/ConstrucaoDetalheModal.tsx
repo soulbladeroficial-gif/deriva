@@ -1,11 +1,13 @@
 import type { MutableRefObject } from 'react'
-import type { GameState } from '../engine/types'
-import type { ConstrucaoDef, NivelCusto } from '../content/construcoesNave'
+import type { GameState, ConstrucaoInstancia } from '../engine/types'
+import type { NivelCusto } from '../content/construcoesNave'
 import {
   bancadaConstruida,
+  construcaoPorId,
   craftar,
   depositar,
   descricaoBufferDef,
+  insumoDe,
   podeCraftar,
   podeDepositar,
   podeUpar,
@@ -17,12 +19,12 @@ import Chip from './Chip'
 import './ConstrucaoDetalheModal.css'
 
 interface Props {
-  def: ConstrucaoDef
+  inst: ConstrucaoInstancia
   hud: GameState
   stateRef: MutableRefObject<GameState>
   onChange: () => void
   onClose: () => void
-  onMover: (defId: string) => void
+  onMover: (instId: string) => void
 }
 
 function ChipsCusto({ custo }: { custo: NivelCusto }) {
@@ -35,44 +37,46 @@ function ChipsCusto({ custo }: { custo: NivelCusto }) {
   )
 }
 
-export default function ConstrucaoDetalheModal({ def, hud, stateRef, onChange, onClose, onMover }: Props) {
-  const inst = hud.construcoes[def.id]
-  if (!inst) return null
+export default function ConstrucaoDetalheModal({ inst, hud, stateRef, onChange, onClose, onMover }: Props) {
+  const instAtual = hud.construcoes.find((i) => i.id === inst.id)
+  const def = instAtual && construcaoPorId(instAtual.defId)
+  if (!instAtual || !def) return null
 
   function fazerDeposito() {
-    depositar(stateRef.current, def.id)
+    depositar(stateRef.current, inst.id)
     onChange()
   }
 
   function fazerCraft() {
-    craftar(stateRef.current, def.id)
+    craftar(stateRef.current, inst.id)
     onChange()
   }
 
   function fazerUpgrade() {
-    uparConstrucao(stateRef.current, def.id)
+    uparConstrucao(stateRef.current, inst.id)
     onChange()
   }
 
   function fazerMover() {
-    removerColocada(stateRef.current, def.id)
+    removerColocada(stateRef.current, inst.id)
     onClose()
     onChange()
-    onMover(def.id)
+    onMover(inst.id)
   }
 
   function fazerRemover() {
-    removerColocada(stateRef.current, def.id)
+    removerColocada(stateRef.current, inst.id)
     onClose()
     onChange()
   }
 
-  const bufferTexto = descricaoBufferDef(def, inst)
-  const noNivelMax = inst.nivel >= def.niveis.length
-  const custoProximo = !noNivelMax ? def.niveis[inst.nivel] : null
+  const insumo = insumoDe(def)
+  const bufferTexto = descricaoBufferDef(def, instAtual)
+  const noNivelMax = instAtual.nivel >= def.niveis.length
+  const custoProximo = !noNivelMax ? def.niveis[instAtual.nivel] : null
   const precisaBancada = !def.bancada && !bancadaConstruida(hud)
-  const efeitosAgora = def.conversor ? efeitosConversor(def.conversor, inst.nivel) : []
-  const efeitosProximo = def.conversor ? efeitosConversor(def.conversor, inst.nivel + 1) : []
+  const efeitosAgora = def.conversor ? efeitosConversor(def.conversor, instAtual.nivel) : []
+  const efeitosProximo = def.conversor && !noNivelMax ? efeitosConversor(def.conversor, instAtual.nivel + 1) : []
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -80,25 +84,38 @@ export default function ConstrucaoDetalheModal({ def, hud, stateRef, onChange, o
         <div className="detalhe-header">
           <span className="detalhe-cor" style={{ background: def.cor }} />
           <h3>{def.nome}</h3>
-          <span className="detalhe-nivel">Nível {inst.nivel}</span>
+          <span className="detalhe-nivel">Nível {instAtual.nivel}</span>
           <button type="button" className="detalhe-fechar" onClick={onClose}>
             ×
           </button>
         </div>
 
-        {efeitosAgora.length > 0 && (
-          <div className="detalhe-chips">
-            {efeitosAgora.map((ef) => (
-              <Chip key={ef.rotulo} icone={ef.icone} cor={ef.cor} rotulo={ef.rotulo} valor={ef.valor} />
-            ))}
-          </div>
-        )}
+        <div className="detalhe-secao">
+          <span className="detalhe-secao-titulo">Status</span>
+          {efeitosAgora.length > 0 ? (
+            <div className="detalhe-chips">
+              {efeitosAgora.map((ef) => (
+                <Chip key={ef.rotulo} icone={ef.icone} cor={ef.cor} rotulo={ef.rotulo} valor={ef.valor} />
+              ))}
+            </div>
+          ) : (
+            <span className="detalhe-vazio">Sem efeito ativo</span>
+          )}
+        </div>
 
-        {bufferTexto && (
+        {insumo && (
           <div className="detalhe-secao">
             <span className="detalhe-secao-titulo">Estoque próprio</span>
             <span className="detalhe-buffer">{bufferTexto}</span>
-            <button type="button" onClick={fazerDeposito} disabled={!podeDepositar(hud, def)}>
+            <div className="detalhe-chips">
+              <Chip
+                icone={insumo.item.slice(0, 2).toUpperCase()}
+                cor="#7dd3fc"
+                rotulo={`${insumo.item} no inventário`}
+                valor={(hud.inventario[insumo.item] ?? 0).toFixed(1)}
+              />
+            </div>
+            <button type="button" onClick={fazerDeposito} disabled={!podeDepositar(hud, def, instAtual)}>
               Depositar
             </button>
           </div>
@@ -116,43 +133,35 @@ export default function ConstrucaoDetalheModal({ def, hud, stateRef, onChange, o
               />
               <Chip icone="—" cor="#9ca3af" rotulo="custo" valor={`${def.craft.custoBuffer} do estoque`} />
             </div>
-            <button type="button" onClick={fazerCraft} disabled={!podeCraftar(hud, def)}>
+            <button type="button" onClick={fazerCraft} disabled={!podeCraftar(def, instAtual)}>
               Criar {def.craft.produzItem}
             </button>
           </div>
         )}
 
-        <div className="detalhe-secao">
+        <div className="detalhe-secao detalhe-melhoria">
           <span className="detalhe-secao-titulo">Melhoria</span>
           {noNivelMax ? (
-            <span>Nível máximo</span>
+            <span className="detalhe-vazio">Nível máximo</span>
           ) : (
             <>
-              {efeitosAgora.length > 0 && (
-                <div className="detalhe-comparacao">
-                  <div>
-                    <span className="detalhe-comparacao-titulo">Agora</span>
-                    <div className="detalhe-chips">
-                      {efeitosAgora.map((ef) => (
-                        <Chip key={ef.rotulo} icone={ef.icone} cor={ef.cor} rotulo={ef.rotulo} valor={ef.valor} />
-                      ))}
-                    </div>
+              {efeitosProximo.length > 0 && (
+                <>
+                  <span className="detalhe-sub-titulo">Vira nível {instAtual.nivel + 1}</span>
+                  <div className="detalhe-chips">
+                    {efeitosProximo.map((ef) => (
+                      <Chip key={ef.rotulo} icone={ef.icone} cor={ef.cor} rotulo={ef.rotulo} valor={ef.valor} />
+                    ))}
                   </div>
-                  <div>
-                    <span className="detalhe-comparacao-titulo">Próximo</span>
-                    <div className="detalhe-chips">
-                      {efeitosProximo.map((ef) => (
-                        <Chip key={ef.rotulo} icone={ef.icone} cor={ef.cor} rotulo={ef.rotulo} valor={ef.valor} />
-                      ))}
-                    </div>
-                  </div>
-                </div>
+                </>
               )}
-              {custoProximo && <ChipsCusto custo={custoProximo} />}
               {precisaBancada && <span className="detalhe-aviso">Precisa de uma Bancada de Upgrade instalada</span>}
-              <button type="button" onClick={fazerUpgrade} disabled={!podeUpar(hud, def)}>
-                Melhorar
-              </button>
+              <div className="detalhe-botao-custo">
+                <button type="button" className="detalhe-botao-melhorar" onClick={fazerUpgrade} disabled={!podeUpar(hud, def, instAtual)}>
+                  Melhorar
+                </button>
+                {custoProximo && <ChipsCusto custo={custoProximo} />}
+              </div>
             </>
           )}
         </div>

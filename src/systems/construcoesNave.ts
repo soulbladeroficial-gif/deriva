@@ -1,4 +1,4 @@
-import type { GameState } from '../engine/types'
+import type { ConstrucaoInstancia, GameState } from '../engine/types'
 import {
   CONSTRUCOES,
   CAPACIDADE_BUFFER_PADRAO,
@@ -19,22 +19,23 @@ export function pertoDe(state: GameState, pos: { x: number; y: number }, raio = 
   return Math.hypot(state.posicao.x - pos.x, state.posicao.y - pos.y) < raio
 }
 
-export function construcaoPorId(id: string) {
-  return CONSTRUCOES.find((d) => d.id === id)
+export function construcaoPorId(defId: string) {
+  return CONSTRUCOES.find((d) => d.id === defId)
 }
 
-export function nivelAtual(state: GameState, id: string) {
-  return state.construcoes[id]?.nivel ?? 0
+export function instanciasDe(state: GameState, defId: string): ConstrucaoInstancia[] {
+  return state.construcoes.filter((i) => i.defId === defId)
 }
 
-export function estaColocada(state: GameState, id: string) {
-  return Boolean(state.construcoes[id]?.colocada)
+export function instanciaPorId(state: GameState, instId: string): ConstrucaoInstancia | undefined {
+  return state.construcoes.find((i) => i.id === instId)
 }
 
 export function bancadaConstruida(state: GameState) {
-  return CONSTRUCOES.some((def) => {
-    const inst = state.construcoes[def.id]
-    return def.bancada && inst && inst.nivel >= 1 && inst.colocada
+  return state.construcoes.some((inst) => {
+    if (!inst.colocada) return false
+    const def = construcaoPorId(inst.defId)
+    return Boolean(def?.bancada)
   })
 }
 
@@ -42,12 +43,9 @@ export function temRecursos(state: GameState, custo: NivelCusto) {
   return Object.entries(custo).every(([item, qtd]) => (state.inventario[item] ?? 0) >= qtd)
 }
 
-/** construções já criadas (nível >= 1) mas ainda não instaladas num ponto da nave */
-export function pendentes(state: GameState): ConstrucaoDef[] {
-  return CONSTRUCOES.filter((def) => {
-    const inst = state.construcoes[def.id]
-    return inst && inst.nivel >= 1 && !inst.colocada
-  })
+/** construções já criadas mas ainda não instaladas num ponto da nave — pode haver várias */
+export function pendentes(state: GameState): ConstrucaoInstancia[] {
+  return state.construcoes.filter((i) => !i.colocada)
 }
 
 /** construções que aparecem no catálogo de "Criar" da bancada (exclui as que já vêm fixas na nave) */
@@ -57,26 +55,31 @@ export function catalogoConstruivel(): ConstrucaoDef[] {
 
 /** só dá pra criar construções perto da bancada de fabricação — ela é uma construção como as outras */
 export function pertoDaBancada(state: GameState) {
-  const inst = state.construcoes[BANCADA_FABRICACAO_ID]
-  if (!inst?.colocada || inst.posX === undefined || inst.posY === undefined) return false
+  const inst = state.construcoes.find((i) => i.defId === BANCADA_FABRICACAO_ID && i.colocada)
+  if (!inst || inst.posX === undefined || inst.posY === undefined) return false
   return pertoDe(state, { x: inst.posX, y: inst.posY })
 }
 
 export function podeCriar(state: GameState, def: ConstrucaoDef) {
-  const atual = state.construcoes[def.id]
-  if (atual && atual.nivel >= 1) return false
   if (!pertoDaBancada(state)) return false
   return temRecursos(state, def.niveis[0])
 }
 
-/** cria uma construção nova (nível 1) na bancada, gasta o material na hora — fica pendente de posicionar */
-export function criarConstrucao(state: GameState, id: string) {
-  const def = construcaoPorId(id)
+let contadorInstancia = 0
+function gerarInstanciaId(defId: string) {
+  contadorInstancia += 1
+  return `${defId}_${contadorInstancia}`
+}
+
+/** cria uma construção nova (nível 1) na bancada, gasta o material na hora — fica pendente de posicionar.
+ * Pode ser chamada várias vezes pro mesmo defId: cada uma vira uma instância independente. */
+export function criarConstrucao(state: GameState, defId: string) {
+  const def = construcaoPorId(defId)
   if (!def || !podeCriar(state, def)) return
   for (const [item, qtd] of Object.entries(def.niveis[0])) {
     state.inventario[item] -= qtd
   }
-  state.construcoes[id] = { nivel: 1, colocada: false, bufferEntrada: 0 }
+  state.construcoes.push({ id: gerarInstanciaId(defId), defId, nivel: 1, colocada: false, bufferEntrada: 0 })
 }
 
 /** item que a construção aceita no estoque próprio — do campo `insumo`, ou do conversor contínuo */
@@ -89,18 +92,16 @@ export function capacidadeBuffer(def: ConstrucaoDef) {
 }
 
 /** quanto dá pra depositar agora (limitado pelo que sobra de espaço e pelo que tem no inventário) */
-export function quantidadeParaDepositar(state: GameState, def: ConstrucaoDef) {
+export function quantidadeParaDepositar(state: GameState, def: ConstrucaoDef, inst: ConstrucaoInstancia) {
   const insumo = insumoDe(def)
   if (!insumo) return 0
-  const inst = state.construcoes[def.id]
-  if (!inst) return 0
   const espacoLivre = capacidadeBuffer(def) - inst.bufferEntrada
   const disponivel = state.inventario[insumo.item] ?? 0
   return Math.max(0, Math.min(espacoLivre, disponivel))
 }
 
-export function podeDepositar(state: GameState, def: ConstrucaoDef) {
-  return quantidadeParaDepositar(state, def) > 0
+export function podeDepositar(state: GameState, def: ConstrucaoDef, inst: ConstrucaoInstancia) {
+  return quantidadeParaDepositar(state, def, inst) > 0
 }
 
 /** texto tipo "Ferro-Níquel: 3.0/10" pro estoque próprio, independente de ser conversor ou craft */
@@ -110,29 +111,28 @@ export function descricaoBufferDef(def: ConstrucaoDef, inst: { bufferEntrada: nu
   return `${insumo.item}: ${inst.bufferEntrada.toFixed(1)}/${capacidadeBuffer(def)}`
 }
 
-export function depositar(state: GameState, defId: string) {
-  const def = construcaoPorId(defId)
-  const inst = state.construcoes[defId]
+export function depositar(state: GameState, instId: string) {
+  const inst = instanciaPorId(state, instId)
+  const def = inst && construcaoPorId(inst.defId)
   const insumo = def && insumoDe(def)
   if (!def || !insumo || !inst) return
-  const qtd = quantidadeParaDepositar(state, def)
+  const qtd = quantidadeParaDepositar(state, def, inst)
   if (qtd <= 0) return
   state.inventario[insumo.item] -= qtd
   inst.bufferEntrada += qtd
 }
 
 /** fabricação sob demanda (ex: Oficina) — consome do estoque próprio, produz direto no inventário */
-export function podeCraftar(state: GameState, def: ConstrucaoDef) {
-  const inst = state.construcoes[def.id]
-  if (!def.craft || !inst) return false
+export function podeCraftar(def: ConstrucaoDef, inst: ConstrucaoInstancia) {
+  if (!def.craft) return false
   return inst.bufferEntrada >= def.craft.custoBuffer
 }
 
-export function craftar(state: GameState, defId: string) {
-  const def = construcaoPorId(defId)
-  const inst = state.construcoes[defId]
+export function craftar(state: GameState, instId: string) {
+  const inst = instanciaPorId(state, instId)
+  const def = inst && construcaoPorId(inst.defId)
   if (!def?.craft || !inst) return
-  if (!podeCraftar(state, def)) return
+  if (!podeCraftar(def, inst)) return
   inst.bufferEntrada -= def.craft.custoBuffer
   const atual = state.inventario[def.craft.produzItem] ?? 0
   state.inventario[def.craft.produzItem] = atual + def.craft.produzQtd
@@ -143,11 +143,10 @@ export function construcaoNaPosicao(
   state: GameState,
   pos: { x: number; y: number },
   raio = RAIO_COLISAO_CONSTRUCAO,
-): ConstrucaoDef | null {
-  for (const def of CONSTRUCOES) {
-    const inst = state.construcoes[def.id]
-    if (!inst?.colocada || inst.posX === undefined || inst.posY === undefined) continue
-    if (Math.hypot(inst.posX - pos.x, inst.posY - pos.y) < raio) return def
+): ConstrucaoInstancia | null {
+  for (const inst of state.construcoes) {
+    if (!inst.colocada || inst.posX === undefined || inst.posY === undefined) continue
+    if (Math.hypot(inst.posX - pos.x, inst.posY - pos.y) < raio) return inst
   }
   return null
 }
@@ -162,9 +161,8 @@ export function podeColocarEm(state: GameState, pos: { x: number; y: number }) {
 /** retângulos de colisão de todas as construções colocadas — o jogador não anda por cima delas */
 export function hitboxesConstrucoes(state: GameState): Retangulo[] {
   const caixas: Retangulo[] = []
-  for (const defId of Object.keys(state.construcoes)) {
-    const inst = state.construcoes[defId]
-    if (!inst?.colocada || inst.posX === undefined || inst.posY === undefined) continue
+  for (const inst of state.construcoes) {
+    if (!inst.colocada || inst.posX === undefined || inst.posY === undefined) continue
     caixas.push({
       x0: inst.posX - RAIO_HITBOX_CONSTRUCAO,
       y0: inst.posY - RAIO_HITBOX_CONSTRUCAO,
@@ -175,17 +173,16 @@ export function hitboxesConstrucoes(state: GameState): Retangulo[] {
   return caixas
 }
 
-export function construcaoColocadaProxima(state: GameState): ConstrucaoDef | null {
-  for (const def of CONSTRUCOES) {
-    const inst = state.construcoes[def.id]
-    if (!inst?.colocada || inst.posX === undefined || inst.posY === undefined) continue
-    if (pertoDe(state, { x: inst.posX, y: inst.posY })) return def
+export function construcaoColocadaProxima(state: GameState): ConstrucaoInstancia | null {
+  for (const inst of state.construcoes) {
+    if (!inst.colocada || inst.posX === undefined || inst.posY === undefined) continue
+    if (pertoDe(state, { x: inst.posX, y: inst.posY })) return inst
   }
   return null
 }
 
-export function colocarPendente(state: GameState, defId: string, pos: { x: number; y: number }) {
-  const inst = state.construcoes[defId]
+export function colocarPendente(state: GameState, instId: string, pos: { x: number; y: number }) {
+  const inst = instanciaPorId(state, instId)
   if (!inst || inst.colocada) return
   if (!podeColocarEm(state, pos)) return
   inst.colocada = true
@@ -193,8 +190,8 @@ export function colocarPendente(state: GameState, defId: string, pos: { x: numbe
   inst.posY = pos.y
 }
 
-export function removerColocada(state: GameState, defId: string) {
-  const inst = state.construcoes[defId]
+export function removerColocada(state: GameState, instId: string) {
+  const inst = instanciaPorId(state, instId)
   if (!inst?.colocada) return
   inst.colocada = false
   inst.posX = undefined
@@ -202,18 +199,17 @@ export function removerColocada(state: GameState, defId: string) {
 }
 
 /** se dá pra upar a construção (recursos + bancada), sem checar proximidade — usado pela UI de detalhe */
-export function podeUpar(state: GameState, def: ConstrucaoDef) {
-  const inst = state.construcoes[def.id]
-  if (!inst || inst.nivel >= def.niveis.length) return false
+export function podeUpar(state: GameState, def: ConstrucaoDef, inst: ConstrucaoInstancia) {
+  if (inst.nivel >= def.niveis.length) return false
   const podeUsarBancada = def.bancada || bancadaConstruida(state)
   if (!podeUsarBancada) return false
   return temRecursos(state, def.niveis[inst.nivel])
 }
 
-export function uparConstrucao(state: GameState, defId: string) {
-  const def = construcaoPorId(defId)
-  if (!def || !podeUpar(state, def)) return
-  const inst = state.construcoes[defId]
+export function uparConstrucao(state: GameState, instId: string) {
+  const inst = instanciaPorId(state, instId)
+  const def = inst && construcaoPorId(inst.defId)
+  if (!def || !inst || !podeUpar(state, def, inst)) return
   const custo = def.niveis[inst.nivel]
   for (const [item, qtd] of Object.entries(custo)) {
     state.inventario[item] -= qtd
@@ -222,19 +218,18 @@ export function uparConstrucao(state: GameState, defId: string) {
 }
 
 export function updateConstrucoesNave(state: GameState, dt: number) {
-  for (const def of CONSTRUCOES) {
-    const inst = state.construcoes[def.id]
-    if (inst?.colocada && inst.nivel >= 1 && def.conversor) {
-      updateConversor(state, dt, def.conversor, inst.nivel, inst)
-    }
+  for (const inst of state.construcoes) {
+    if (!inst.colocada) continue
+    const def = construcaoPorId(inst.defId)
+    if (def?.conversor) updateConversor(state, dt, def.conversor, inst.nivel, inst)
   }
 
-  const otimizador = CONSTRUCOES.find((def) => def.conversor?.reduzConsumoPercent)
-  if (otimizador) {
-    const inst = state.construcoes[otimizador.id]
-    if (inst?.colocada && inst.nivel >= 1) {
-      const reducao = (otimizador.conversor?.reduzConsumoPercent ?? 0) * inst.nivel
-      state.nave.energiaConsumida *= Math.max(0, 1 - reducao)
+  for (const inst of state.construcoes) {
+    if (!inst.colocada) continue
+    const def = construcaoPorId(inst.defId)
+    const reduz = def?.conversor?.reduzConsumoPercent
+    if (reduz) {
+      state.nave.energiaConsumida *= Math.max(0, 1 - reduz * inst.nivel)
     }
   }
 }

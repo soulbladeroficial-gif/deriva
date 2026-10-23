@@ -16,7 +16,6 @@
   cursor: crosshair;
 }
 
-.hud-nave,
 .hud-jogador {
   position: absolute;
   top: 16px;
@@ -31,17 +30,8 @@
   pointer-events: none;
 }
 
-.hud-nave {
+.hud-jogador-esquerda {
   left: 16px;
-}
-
-.hud-jogador {
-  right: 16px;
-  align-items: flex-end;
-}
-
-.hud-jogador .hud-linha {
-  flex-direction: row-reverse;
 }
 
 .hud-titulo {

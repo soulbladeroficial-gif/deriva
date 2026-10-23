@@ -66,6 +66,27 @@ export const SALAS: SalaDef[] = [
 
 export const CAMA = { x: 230, y: 950 }
 
+/** ponto de saída da nave — o jogador precisa estar aqui pra "Sair da nave" (ao em vez de um botão mágico) */
+export const SAIDA = { x: 120, y: 560 }
+
+/** raio de canto bem grande pras salas renderizarem como cápsulas arredondadas, não blocos */
+export const RAIO_SALA = 60
+
+export interface Curva {
+  a: { x: number; y: number }
+  c: { x: number; y: number }
+  b: { x: number; y: number }
+}
+
+/** tubos de conexão decorativos entre as portas — só visual (a colisão continua o corredor aberto) */
+export const TUBOS: Curva[] = [
+  { a: { x: 700, y: 320 }, c: { x: 460, y: 320 }, b: { x: 460, y: 560 } },
+  { a: { x: 700, y: 320 }, c: { x: 940, y: 320 }, b: { x: 940, y: 560 } },
+  { a: { x: 460, y: 560 }, c: { x: 380, y: 750 }, b: { x: 460, y: 940 } },
+  { a: { x: 940, y: 560 }, c: { x: 1020, y: 750 }, b: { x: 940, y: 940 } },
+]
+export const LARGURA_TUBO = 110
+
 export function salaPorId(id: string) {
   return SALAS.find((s) => s.id === id)
 }

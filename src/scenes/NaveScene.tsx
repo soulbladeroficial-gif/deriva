@@ -11,19 +11,21 @@ import {
   construcaoColocadaProxima,
   construcaoPorId,
   hitboxesConstrucoes,
+  instanciaPorId,
   pertoDe,
   podeColocarEm,
   colocarPendente,
   updateConstrucoesNave,
 } from '../systems/construcoesNave'
 import { BANCADA_FABRICACAO_ID } from '../content/construcoesNave'
-import { updatePanes, podeRepararCasco, repararCasco } from '../systems/casco'
+import { updatePanes, podeRepararCasco, repararCasco, pertoDaAvaria } from '../systems/casco'
 import { dormir } from '../systems/dormitorio'
-import { PAREDES, CAMA } from '../content/salasNave'
+import { PAREDES, SALAS, CAMA, SAIDA, RAIO_SALA, TUBOS, LARGURA_TUBO } from '../content/salasNave'
 import { cloneForHud } from '../state/cloneForHud'
 import InventarioModal from '../ui/InventarioModal'
 import ConstrucaoDetalheModal from '../ui/ConstrucaoDetalheModal'
 import BancadaModal from '../ui/BancadaModal'
+import PainelNaveModal from '../ui/PainelNaveModal'
 import type { GameState } from '../engine/types'
 import type { InputState } from '../engine/input'
 import './NaveScene.css'
@@ -41,6 +43,10 @@ const TILE_SIZE = 32
 const PLAYER_RAIO = 12
 /** quanto mais perto a câmera fica — não dá mais pra ver a nave toda de uma vez */
 const ZOOM = 1.7
+/** vista superior levemente inclinada (~30°) — achata o eixo Y na hora de desenhar */
+const INCLINACAO = (30 * Math.PI) / 180
+const ZOOM_Y = ZOOM * Math.cos(INCLINACAO)
+const COR_PISO_SALA = '#15182a'
 
 interface Props {
   stateRef: MutableRefObject<GameState>
@@ -52,6 +58,7 @@ export default function NaveScene({ stateRef, onExplorarPlaneta }: Props) {
   const [hud, setHud] = useState(() => cloneForHud(stateRef.current))
   const [avisoSono, setAvisoSono] = useState<string | null>(null)
   const [inventarioAberto, setInventarioAberto] = useState(false)
+  const [painelAberto, setPainelAberto] = useState(false)
   const [detalheId, setDetalheId] = useState<string | null>(null)
   const [bancadaAberta, setBancadaAberta] = useState(false)
   const [posicionando, setPosicionando] = useState<string | null>(null)
@@ -98,7 +105,7 @@ export default function NaveScene({ stateRef, onExplorarPlaneta }: Props) {
 
   function posicaoDoMouseNoMundo(camera: { x: number; y: number }) {
     const worldX = mouseRef.current.x / ZOOM + camera.x
-    const worldY = mouseRef.current.y / ZOOM + camera.y
+    const worldY = mouseRef.current.y / ZOOM_Y + camera.y
     return {
       x: Math.round(worldX / TILE_SIZE) * TILE_SIZE,
       y: Math.round(worldY / TILE_SIZE) * TILE_SIZE,
@@ -112,11 +119,11 @@ export default function NaveScene({ stateRef, onExplorarPlaneta }: Props) {
     if (!ctx) return
 
     const viewW = canvas.width / ZOOM
-    const viewH = canvas.height / ZOOM
+    const viewH = canvas.height / ZOOM_Y
     const camera = computeCamera(state.posicao.x, state.posicao.y, viewW, viewH)
 
     ctx.save()
-    ctx.scale(ZOOM, ZOOM)
+    ctx.scale(ZOOM, ZOOM_Y)
 
     drawEspacoExterior(ctx, camera, viewW, viewH)
     drawCascoNave(ctx, camera, MUNDO)
@@ -126,32 +133,89 @@ export default function NaveScene({ stateRef, onExplorarPlaneta }: Props) {
       drawGridFloor(ctx, camera, viewW, viewH, TILE_SIZE, 'rgba(255,255,255,0.12)')
     }
 
+    // tubos de conexão (visual) entre as salas — corredor orgânico, sem quina
+    ctx.strokeStyle = COR_PISO_SALA
+    ctx.lineWidth = LARGURA_TUBO
+    ctx.lineCap = 'round'
+    ctx.lineJoin = 'round'
+    for (const tubo of TUBOS) {
+      ctx.beginPath()
+      ctx.moveTo(tubo.a.x - camera.x, tubo.a.y - camera.y)
+      ctx.quadraticCurveTo(tubo.c.x - camera.x, tubo.c.y - camera.y, tubo.b.x - camera.x, tubo.b.y - camera.y)
+      ctx.stroke()
+    }
+
+    // piso das salas — cápsulas arredondadas, não blocos
+    ctx.fillStyle = COR_PISO_SALA
+    for (const sala of SALAS) {
+      const { x0, y0, x1, y1 } = sala.area
+      ctx.beginPath()
+      ctx.roundRect(x0 - camera.x, y0 - camera.y, x1 - x0, y1 - y0, RAIO_SALA)
+      ctx.fill()
+    }
+
+    // paredes — segmentos com cantos levemente arredondados
     ctx.fillStyle = '#4b5168'
     for (const p of PAREDES) {
-      ctx.fillRect(p.x0 - camera.x, p.y0 - camera.y, p.x1 - p.x0, p.y1 - p.y0)
+      ctx.beginPath()
+      ctx.roundRect(p.x0 - camera.x, p.y0 - camera.y, p.x1 - p.x0, p.y1 - p.y0, 4)
+      ctx.fill()
     }
 
     // construções colocadas (inclui a Bancada) — só o ícone/cor, sem texto; detalhes ficam na UI
-    for (const defId of Object.keys(state.construcoes)) {
-      const inst = state.construcoes[defId]
-      if (!inst?.colocada || inst.posX === undefined || inst.posY === undefined) continue
-      const d = construcaoPorId(defId)
+    for (const inst of state.construcoes) {
+      if (!inst.colocada || inst.posX === undefined || inst.posY === undefined) continue
+      const d = construcaoPorId(inst.defId)
       if (!d) continue
       const sx = inst.posX - camera.x
       const sy = inst.posY - camera.y
       ctx.fillStyle = d.cor
-      ctx.fillRect(sx - 28, sy - 28, 56, 56)
+      ctx.beginPath()
+      ctx.roundRect(sx - 28, sy - 28, 56, 56, 10)
+      ctx.fill()
     }
 
     // cama do dormitório
     const bx = CAMA.x - camera.x
     const by = CAMA.y - camera.y
     ctx.fillStyle = '#581c87'
-    ctx.fillRect(bx - 32, by - 18, 64, 36)
+    ctx.beginPath()
+    ctx.roundRect(bx - 32, by - 18, 64, 36, 8)
+    ctx.fill()
+
+    // saída da nave (porta/airlock) — é por onde se vai pro planeta
+    const ex = SAIDA.x - camera.x
+    const ey = SAIDA.y - camera.y
+    ctx.fillStyle = '#0d9488'
+    ctx.beginPath()
+    ctx.roundRect(ex - 22, ey - 32, 44, 64, 10)
+    ctx.fill()
+
+    // rachadura da avaria — brilho vermelho visível de longe
+    if (state.nave.paneLocal) {
+      const rx = state.nave.paneLocal.x - camera.x
+      const ry = state.nave.paneLocal.y - camera.y
+      const brilho = ctx.createRadialGradient(rx, ry, 4, rx, ry, 70)
+      brilho.addColorStop(0, 'rgba(248,113,113,0.55)')
+      brilho.addColorStop(1, 'rgba(248,113,113,0)')
+      ctx.fillStyle = brilho
+      ctx.beginPath()
+      ctx.arc(rx, ry, 70, 0, Math.PI * 2)
+      ctx.fill()
+      ctx.strokeStyle = '#f87171'
+      ctx.lineWidth = 3
+      ctx.beginPath()
+      ctx.moveTo(rx - 10, ry - 14)
+      ctx.lineTo(rx - 2, ry - 2)
+      ctx.lineTo(rx - 8, ry + 4)
+      ctx.lineTo(rx + 2, ry + 14)
+      ctx.stroke()
+    }
 
     // ghost de posicionamento — segue o mouse, ajustado na malha
     if (posicionandoRef.current) {
-      const def = construcaoPorId(posicionandoRef.current)
+      const inst = instanciaPorId(state, posicionandoRef.current)
+      const def = inst && construcaoPorId(inst.defId)
       if (def) {
         const alvo = posicaoDoMouseNoMundo(camera)
         const valido = podeColocarEm(state, alvo)
@@ -167,11 +231,7 @@ export default function NaveScene({ stateRef, onExplorarPlaneta }: Props) {
         ctx.fillStyle = '#f3f4f6'
         ctx.font = 'bold 13px sans-serif'
         ctx.textAlign = 'center'
-        ctx.fillText(
-          valido ? `Clique pra posicionar ${def.nome}` : 'Posição inválida',
-          viewW / 2,
-          30,
-        )
+        ctx.fillText(valido ? `Clique pra posicionar ${def.nome}` : 'Posição inválida', viewW / 2, 30)
       }
     }
 
@@ -214,15 +274,26 @@ export default function NaveScene({ stateRef, onExplorarPlaneta }: Props) {
         setInventarioAberto(false)
         setDetalheId(null)
         setBancadaAberta(false)
+        setPainelAberto(false)
         return
       }
-      if ((e.key === 'i' || e.key === 'I') && !posicionandoRef.current) {
+      if (posicionandoRef.current) return
+      if (e.key === 'e' || e.key === 'E') {
         e.preventDefault()
         setInventarioAberto((v) => !v)
+      }
+      if (e.key === 'f' || e.key === 'F') {
+        e.preventDefault()
+        abrirConstrucaoProximaRef.current()
+      }
+      if (e.key === 'p' || e.key === 'P') {
+        e.preventDefault()
+        setPainelAberto((v) => !v)
       }
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   function onMouseMoveCanvas(e: React.MouseEvent<HTMLCanvasElement>) {
@@ -238,7 +309,7 @@ export default function NaveScene({ stateRef, onExplorarPlaneta }: Props) {
       stateRef.current.posicao.x,
       stateRef.current.posicao.y,
       canvas.width / ZOOM,
-      canvas.height / ZOOM,
+      canvas.height / ZOOM_Y,
     )
     const alvo = posicaoDoMouseNoMundo(camera)
     if (!podeColocarEm(stateRef.current, alvo)) return
@@ -265,16 +336,21 @@ export default function NaveScene({ stateRef, onExplorarPlaneta }: Props) {
   }
 
   function abrirConstrucaoProxima() {
-    if (!construcaoProxima) return
-    if (construcaoProxima.id === BANCADA_FABRICACAO_ID) setBancadaAberta(true)
-    else setDetalheId(construcaoProxima.id)
+    const proxima = construcaoColocadaProxima(hud)
+    if (!proxima) return
+    if (proxima.defId === BANCADA_FABRICACAO_ID) setBancadaAberta(true)
+    else setDetalheId(proxima.id)
   }
+
+  const abrirConstrucaoProximaRef = useRef(abrirConstrucaoProxima)
+  useEffect(() => {
+    abrirConstrucaoProximaRef.current = abrirConstrucaoProxima
+  })
 
   const construcaoProxima = construcaoColocadaProxima(hud)
   const pertoDaCama = pertoDe(hud, CAMA)
-  const detalheDef = detalheId ? construcaoPorId(detalheId) : null
-  const capacidadeEnergia = Math.max(hud.nave.energiaGerada, 1)
-  const energiaDisponivel = Math.max(0, hud.nave.energiaGerada - hud.nave.energiaConsumida)
+  const pertoDaSaida = pertoDe(hud, SAIDA)
+  const detalheInst = detalheId ? instanciaPorId(hud, detalheId) : null
 
   return (
     <div className="nave-scene">
@@ -285,23 +361,7 @@ export default function NaveScene({ stateRef, onExplorarPlaneta }: Props) {
         onClick={onClickCanvas}
       />
 
-      <div className="hud-nave">
-        <span className="hud-titulo">NAVE</span>
-        <div className="hud-linha">
-          <span>Casco</span>
-          <progress value={hud.nave.casco} max={hud.nave.cascoMax} />
-        </div>
-        <div className="hud-linha">
-          <span>Energia</span>
-          <progress value={energiaDisponivel} max={capacidadeEnergia} />
-        </div>
-        <div className="hud-linha">
-          <span>O2</span>
-          <progress value={hud.nave.oxigenio} max={hud.nave.oxigenioMax} />
-        </div>
-      </div>
-
-      <div className="hud-jogador">
+      <div className="hud-jogador hud-jogador-esquerda">
         <span className="hud-titulo">JOGADOR</span>
         <div className="hud-linha">
           <span>Fome</span>
@@ -327,17 +387,24 @@ export default function NaveScene({ stateRef, onExplorarPlaneta }: Props) {
         ) : (
           <>
             <button type="button" onClick={() => setInventarioAberto(true)}>
-              Inventário (I)
+              Inventário (E)
             </button>
-            <button type="button" onClick={onExplorarPlaneta}>
-              Explorar planeta próximo (Rochoso Árido)
+            <button type="button" onClick={() => setPainelAberto(true)}>
+              Painel da Nave (P)
             </button>
-            <button type="button" onClick={reparar} disabled={!podeRepararCasco(hud)}>
-              Reparar Casco (2 Peças)
-            </button>
+            {pertoDaSaida && (
+              <button type="button" onClick={onExplorarPlaneta}>
+                Sair da nave
+              </button>
+            )}
+            {pertoDaAvaria(hud) && (
+              <button type="button" onClick={reparar} disabled={!podeRepararCasco(hud)}>
+                Reparar rachadura (2 Peças)
+              </button>
+            )}
             {construcaoProxima && (
               <button type="button" onClick={abrirConstrucaoProxima}>
-                Abrir {construcaoProxima.nome}
+                Abrir {construcaoPorId(construcaoProxima.defId)?.nome} (F)
               </button>
             )}
             {pertoDaCama && (
@@ -355,21 +422,23 @@ export default function NaveScene({ stateRef, onExplorarPlaneta }: Props) {
           stateRef={stateRef}
           onChange={() => setHud(cloneForHud(stateRef.current))}
           onClose={() => setInventarioAberto(false)}
-          onPosicionar={(defId) => {
+          onPosicionar={(instId) => {
             setInventarioAberto(false)
-            setPosicionando(defId)
+            setPosicionando(instId)
           }}
         />
       )}
 
-      {detalheDef && (
+      {painelAberto && <PainelNaveModal hud={hud} onClose={() => setPainelAberto(false)} />}
+
+      {detalheInst && (
         <ConstrucaoDetalheModal
-          def={detalheDef}
+          inst={detalheInst}
           hud={hud}
           stateRef={stateRef}
           onChange={() => setHud(cloneForHud(stateRef.current))}
           onClose={() => setDetalheId(null)}
-          onMover={(defId) => setPosicionando(defId)}
+          onMover={(instId) => setPosicionando(instId)}
         />
       )}
 

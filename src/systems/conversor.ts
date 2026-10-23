@@ -1,4 +1,4 @@
-import type { ConstrucaoState, GameState } from '../engine/types'
+import type { ConstrucaoInstancia, GameState } from '../engine/types'
 
 export interface ConversorSpec {
   consomeItem?: { item: string; taxa: number }
@@ -14,7 +14,19 @@ export interface ConversorSpec {
 }
 
 /**
- * nivel multiplica consumo e produção — nível 2 e 3 rendem mais, consistente com o upgrade.
+ * produção (saída) escala cheio com o nível — nível 2 rende 2x, nível 3 rende 3x.
+ * consumo (entrada) escala mais devagar — nível 2 custa 1.5x, nível 3 custa 2x — senão upar
+ * nunca compensa mais do que construir outra igual do zero.
+ */
+function multiplicadorProducao(nivel: number) {
+  return nivel
+}
+
+function multiplicadorConsumo(nivel: number) {
+  return 1 + (nivel - 1) * 0.5
+}
+
+/**
  * O material de entrada sai do BUFFER PRÓPRIO da construção (inst.bufferEntrada), não do
  * inventário geral — o jogador precisa depositar manualmente pra reabastecer.
  */
@@ -23,40 +35,40 @@ export function updateConversor(
   dt: number,
   spec: ConversorSpec,
   nivel = 1,
-  inst?: ConstrucaoState,
+  inst?: ConstrucaoInstancia,
 ) {
   if (spec.consomeItem) {
-    const consumo = spec.consomeItem.taxa * nivel * dt
+    const consumo = spec.consomeItem.taxa * multiplicadorConsumo(nivel) * dt
     const bufferAtual = inst?.bufferEntrada ?? 0
     if (bufferAtual < consumo) return
     if (inst) inst.bufferEntrada = bufferAtual - consumo
   }
 
   if (spec.consomeEnergia) {
-    state.nave.energiaConsumida += spec.consomeEnergia * nivel
+    state.nave.energiaConsumida += spec.consomeEnergia * multiplicadorConsumo(nivel)
   }
 
   if (spec.produzItem) {
     const atual = state.inventario[spec.produzItem.item] ?? 0
-    state.inventario[spec.produzItem.item] = atual + spec.produzItem.taxa * nivel * dt
+    state.inventario[spec.produzItem.item] = atual + spec.produzItem.taxa * multiplicadorProducao(nivel) * dt
   }
 
   if (spec.produzItens) {
     for (const saida of spec.produzItens) {
       const atual = state.inventario[saida.item] ?? 0
-      state.inventario[saida.item] = atual + saida.taxa * nivel * dt
+      state.inventario[saida.item] = atual + saida.taxa * multiplicadorProducao(nivel) * dt
     }
   }
 
   if (spec.produzO2Nave) {
     state.nave.oxigenio = Math.min(
       state.nave.oxigenioMax,
-      state.nave.oxigenio + spec.produzO2Nave * nivel * dt,
+      state.nave.oxigenio + spec.produzO2Nave * multiplicadorProducao(nivel) * dt,
     )
   }
 
   if (spec.produzEnergia) {
-    state.nave.energiaGerada += spec.produzEnergia * nivel
+    state.nave.energiaGerada += spec.produzEnergia * multiplicadorProducao(nivel)
   }
 }
 
@@ -80,7 +92,7 @@ export function efeitosConversor(spec: ConversorSpec, nivel: number): Efeito[] {
       icone: spec.consomeItem.item.slice(0, 2).toUpperCase(),
       cor: NEGATIVO,
       rotulo: spec.consomeItem.item,
-      valor: `-${(spec.consomeItem.taxa * nivel).toFixed(2)}/s`,
+      valor: `-${(spec.consomeItem.taxa * multiplicadorConsumo(nivel)).toFixed(2)}/s`,
     })
   }
   if (spec.produzItem) {
@@ -88,7 +100,7 @@ export function efeitosConversor(spec: ConversorSpec, nivel: number): Efeito[] {
       icone: spec.produzItem.item.slice(0, 2).toUpperCase(),
       cor: POSITIVO,
       rotulo: spec.produzItem.item,
-      valor: `+${(spec.produzItem.taxa * nivel).toFixed(2)}/s`,
+      valor: `+${(spec.produzItem.taxa * multiplicadorProducao(nivel)).toFixed(2)}/s`,
     })
   }
   if (spec.produzItens) {
@@ -97,21 +109,41 @@ export function efeitosConversor(spec: ConversorSpec, nivel: number): Efeito[] {
         icone: s.item.slice(0, 2).toUpperCase(),
         cor: POSITIVO,
         rotulo: s.item,
-        valor: `+${(s.taxa * nivel).toFixed(2)}/s`,
+        valor: `+${(s.taxa * multiplicadorProducao(nivel)).toFixed(2)}/s`,
       })
     }
   }
   if (spec.consomeEnergia) {
-    efeitos.push({ icone: '⚡', cor: NEGATIVO, rotulo: 'Energia', valor: `-${(spec.consomeEnergia * nivel).toFixed(1)}W` })
+    efeitos.push({
+      icone: '⚡',
+      cor: NEGATIVO,
+      rotulo: 'Energia',
+      valor: `-${(spec.consomeEnergia * multiplicadorConsumo(nivel)).toFixed(1)}W`,
+    })
   }
   if (spec.produzEnergia) {
-    efeitos.push({ icone: '⚡', cor: POSITIVO, rotulo: 'Energia', valor: `+${(spec.produzEnergia * nivel).toFixed(1)}W` })
+    efeitos.push({
+      icone: '⚡',
+      cor: POSITIVO,
+      rotulo: 'Energia',
+      valor: `+${(spec.produzEnergia * multiplicadorProducao(nivel)).toFixed(1)}W`,
+    })
   }
   if (spec.produzO2Nave) {
-    efeitos.push({ icone: 'O2', cor: POSITIVO, rotulo: 'Oxigênio', valor: `+${(spec.produzO2Nave * nivel).toFixed(1)}/s` })
+    efeitos.push({
+      icone: 'O2',
+      cor: POSITIVO,
+      rotulo: 'Oxigênio',
+      valor: `+${(spec.produzO2Nave * multiplicadorProducao(nivel)).toFixed(1)}/s`,
+    })
   }
   if (spec.reduzConsumoPercent) {
-    efeitos.push({ icone: '%', cor: '#c084fc', rotulo: 'Consumo', valor: `-${(spec.reduzConsumoPercent * nivel * 100).toFixed(0)}%` })
+    efeitos.push({
+      icone: '%',
+      cor: '#c084fc',
+      rotulo: 'Consumo',
+      valor: `-${(spec.reduzConsumoPercent * nivel * 100).toFixed(0)}%`,
+    })
   }
   return efeitos
 }

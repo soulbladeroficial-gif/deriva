@@ -62,11 +62,9 @@ export default function BancadaModal({ hud, stateRef, onChange, onClose }: Props
 
           <div className="bancada-coluna">
             <span className="bancada-coluna-titulo">Construções</span>
+            <p className="bancada-dica">Pode criar quantas quiser — cada uma vira um item pra posicionar.</p>
             <div className="bancada-receitas">
               {catalogo.map((def) => {
-                const inst = hud.construcoes[def.id]
-                const nivel = inst?.nivel ?? 0
-                if (nivel > 0) return null
                 const pronta = temRecursos(hud, def.niveis[0])
                 return (
                   <div

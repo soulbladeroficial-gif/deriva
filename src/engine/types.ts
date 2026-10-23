@@ -9,6 +9,8 @@ export interface NaveState {
   oxigenioMax: number
   casco: number
   cascoMax: number
+  /** ponto exato da avaria ativa (rachadura visível na parede) — null quando não há pane */
+  paneLocal: { x: number; y: number } | null
 }
 
 export interface JogadorState {
@@ -20,7 +22,10 @@ export interface JogadorState {
   oxigenioTrajeMax: number
 }
 
-export interface ConstrucaoState {
+export interface ConstrucaoInstancia {
+  /** identifica essa instância específica — pode haver várias do mesmo defId */
+  id: string
+  defId: string
   nivel: number
   /** true = instalada livremente em algum ponto do chão da nave (posX/posY definidos); false = criada mas ainda no inventário, esperando posicionamento */
   colocada: boolean
@@ -30,7 +35,7 @@ export interface ConstrucaoState {
   bufferEntrada: number
 }
 
-export type ConstrucoesState = Record<string, ConstrucaoState>
+export type ConstrucoesState = ConstrucaoInstancia[]
 
 export interface PosicaoState {
   x: number
