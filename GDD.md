@@ -1,4 +1,4 @@
-# Deriva — Documento de Design
+# Voyage Deriva — Documento de Design
 
 > Documento vivo. Atualizado conforme as decisões de design são fechadas na conversa com o Claude Code.
 

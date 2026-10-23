@@ -21,7 +21,7 @@ function App() {
 
   return (
     <div className="screen screen-inicio">
-      <h1>Deriva</h1>
+      <h1>Voyage Deriva</h1>
       <button type="button" onClick={() => setScreen('nave')}>
         Nova Viagem
       </button>
